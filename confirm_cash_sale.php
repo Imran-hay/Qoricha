@@ -1,13 +1,41 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-   // header("Location: login.php");
-   // exit();
+    //header("Location: login.php");
+    //exit();
 }
-require 'sidebar.php'; // Assuming you have an admin sidebar
+if (isset($_GET['download'])) {
+    require 'config.php'; // Only require what's needed for the download
+    
+    $sale_id = $_GET['download'];
+
+    // Fetch the bank statement file path from the database
+    $stmt = $pdo->prepare("SELECT bank_statement FROM sales WHERE sale_id = ?");
+    $stmt->execute([$sale_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result && $result['bank_statement']) {
+        $filepath = $result['bank_statement'];
+
+        if (file_exists($filepath)) {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($filepath));
+            readfile($filepath);
+            exit;
+        }
+    }
+    // If we get here, the download failed - we'll continue with the page
+}
+require 'cashier_sidebar.php'; // Assuming you have a cashier sidebar
 require 'config.php';
 
-// Handle approval/rejection actions
+// Handle approval/rejection/undo actions
+$message = ''; // Initialize message variable
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sale_id = $_POST['sale_id'];
     $action = $_POST['action'];
@@ -16,7 +44,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $new_status = 'approved';
     } elseif ($action === 'reject') {
         $new_status = 'rejected';
-    } else {
+    } elseif ($action === 'undo') {
+        $new_status = 'pending';
+    }
+    else {
         // Invalid action
         $message = "Invalid action.";
     }
@@ -32,12 +63,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Fetch all sales
-$stmt = $pdo->query("SELECT s.sale_id, s.customer_name, s.quantity, i.item_name, s.total_amount, s.due_date, s.payment_type, s.status, u.fullname AS agent_name
+// Handle bank statement download
+if (isset($_GET['download'])) {
+    $sale_id = $_GET['download'];
+
+    // Fetch the bank statement file path from the database
+    $stmt = $pdo->prepare("SELECT bank_statement FROM sales WHERE sale_id = ?");
+    $stmt->execute([$sale_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result && $result['bank_statement']) {
+        $filepath = $result['bank_statement'];
+
+        if (file_exists($filepath)) {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($filepath));
+            readfile($filepath);
+            exit;
+        } else {
+            $message = "Bank statement file not found at: " . htmlspecialchars($filepath);
+        }
+    } else {
+        $message = "Bank statement not found for Sale ID: " . $sale_id;
+    }
+}
+
+// Fetch all cash sales, including the bank_statement field
+$stmt = $pdo->prepare("SELECT s.sale_id, s.customer_name, s.quantity, i.item_name, s.total_amount, s.due_date, s.payment_type, s.status, u.fullname AS agent_name, s.bank_statement
                      FROM sales s
                      JOIN items i ON s.item_id = i.item_id
                      JOIN users u ON s.user_id = u.user_id
-                     ORDER BY s.status, s.sale_id"); // Order by status then sale_id
+                     WHERE s.payment_type = 'cash'
+                     ORDER BY s.sale_id");
+$stmt->execute([]);
 $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
@@ -47,7 +110,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Approvals</title>
+    <title>Confirm Cash Sales</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body {
@@ -57,7 +120,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 20px;
         }
         .content {
-            margin-left: 120px; /* Adjust for sidebar width */
+            margin-left: 220px; /* Adjust for sidebar width */
             padding: 20px;
             background: #fff;
             border-radius: 5px;
@@ -70,6 +133,8 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            padding-left: 20px;
+            margin-left: 20px;
         }
         th, td {
             padding: 10px;
@@ -100,36 +165,24 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             background-color: #f44336;
             color: white;
         }
-        .message {
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 5px;
-            text-align: center;
+        .undo-button {
+            background-color: #008CBA;
+            color: white;
         }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .download-button {
+            background-color: #808080; /* Grey color */
+            color: white;
         }
     </style>
-
-<script>
-       
+    <script>
+        <?php if ($message): ?>
+            alert("<?php echo htmlspecialchars($message); ?>");
+        <?php endif; ?>
     </script>
 </head>
 <body>
     <div class="content">
-        <h1>Sales Approvals</h1>
-        <?php if (isset($message)): ?>
-            <div class="message <?php echo (strpos($message, 'Error') !== false) ? 'error' : 'success'; ?>">
-                <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
+        <h1>Confirm Cash Sales</h1>
         <table>
             <thead>
                 <tr>
@@ -143,6 +196,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Agent</th>
                     <th>Status</th>
                     <th>Actions</th>
+                    <th>Bank Statement</th>
                 </tr>
             </thead>
             <tbody>
@@ -159,8 +213,8 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <td><?php echo htmlspecialchars($sale['agent_name']); ?></td>
                             <td><?php echo isset($sale['status']) ? htmlspecialchars($sale['status']) : 'N/A'; ?></td>
                             <td>
-                            <?php if (isset($sale['status']) && $sale['status'] === 'pending' && isset($sale['payment_type']) && $sale['payment_type'] === 'Credit'): ?>
-                                    <div class="action-buttons">
+                                <div class="action-buttons">
+                                    <?php if (isset($sale['status']) && $sale['status'] === 'pending'): ?>
                                         <form method="POST">
                                             <input type="hidden" name="sale_id" value="<?php echo htmlspecialchars($sale['sale_id']); ?>">
                                             <input type="hidden" name="action" value="approve">
@@ -171,16 +225,31 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <input type="hidden" name="action" value="reject">
                                             <button type="submit" class="reject-button">Reject</button>
                                         </form>
-                                    </div>
-                                <?php else: ?>
-                                    <?php echo isset($sale['status']) ? htmlspecialchars($sale['status']) : 'N/A'; ?>
-                                <?php endif; ?>
+                                    <?php elseif (isset($sale['status']) && ($sale['status'] === 'approved' || $sale['status'] === 'rejected')): ?>
+                                        <form method="POST">
+                                            <input type="hidden" name="sale_id" value="<?php echo htmlspecialchars($sale['sale_id']); ?>">
+                                            <input type="hidden" name="action" value="undo">
+                                            <button type="submit" class="undo-button">Undo</button>
+                                        </form>
+                                    <?php else: ?>
+                                        N/A
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td>
+                                <?php
+                                    if (!empty($sale['bank_statement'])) {
+                                        echo '<a href="?download=' . htmlspecialchars($sale['sale_id']) . '" class="download-button">Download</a>';
+                                    } else {
+                                        echo 'Not Available';
+                                    }
+                                ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="10">No sales found.</td>
+                        <td colspan="11">No cash sales found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

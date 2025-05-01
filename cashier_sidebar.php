@@ -14,7 +14,7 @@
             display: flex;
         }
         .sidebar {
-            width: 250px;
+            width: 200px;
             background-color: rgb(194, 221, 223);
             height: 100vh;
             padding: 20px;
@@ -127,9 +127,8 @@
                 </button>
                 <ul id="manageSalesSubMenu" class="submenu">
                     <li><a href="confirm_cash_sale.php">Confirm Cash Sale</a></li>
-                    <li><a href="pending_credit_sales.php">Approve Credit Sales</a></li>
-                    <li><a href="undo_cash_sale.php">Undo Cash Sale</a></li>
-                    <li><a href="undo_credit_sale.php">Undo Credit Sale</a></li>
+                    <li><a href="view_credit_sales.php">View Credit Sales</a></li>
+              
                 </ul>
             </li>
             <li>

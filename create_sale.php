@@ -9,34 +9,32 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'agent') {
 require 'agent_sidebar.php';
 require 'config.php';
 
-// Fetch products for the dropdown
-$products = $pdo->query("SELECT item_id, item_name, unit_price FROM items")->fetchAll(PDO::FETCH_ASSOC);
+// Fetch products for the dropdown (we still need the item_id and item_name)
+$products = $pdo->query("SELECT item_id, item_name FROM items")->fetchAll(PDO::FETCH_ASSOC);
 
 // Handle form submission
-$message = ""; // Initialize message variable
+$message = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Form handling logic here...
-    // Retrieve form data
     $customer_name = $_POST['customer_name'];
     $quantity = $_POST['quantity'];
-    $item_id = $_POST['item_id']; // Changed product_id to item_id
-    $total_amount = $_POST['total_amount'];
+    $item_id = $_POST['item_id'];
+    $selling_price = $_POST['selling_price'];
+    $total_amount = $quantity * $selling_price;
     $payment_type = $_POST['payment_type'];
     $due_date = $_POST['due_date'];
-    $transaction_number = $_POST['transaction_number'] ?? ''; // Use null coalescing operator
+    $transaction_number = $_POST['transaction_number'] ?? '';
 
     // File upload handling
-    $bank_statement = null; // Initialize bank_statement variable
+    $bank_statement = null;
     if ($payment_type == "Cash" && isset($_FILES['bank_statement']) && $_FILES['bank_statement']['error'] == 0) {
-        $target_dir = "uploads/"; // Create an 'uploads' directory in your project
+        $target_dir = "uploads/";
         $target_file = $target_dir . basename($_FILES["bank_statement"]["name"]);
         $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
-        // Validate file type (optional, but recommended)
         $allowed_types = ["pdf", "jpg", "jpeg", "png"];
         if (in_array($imageFileType, $allowed_types)) {
             if (move_uploaded_file($_FILES["bank_statement"]["tmp_name"], $target_file)) {
-                $bank_statement = $target_file; // Store the file path in the database
+                $bank_statement = $target_file;
             } else {
                 $message = "Sorry, there was an error uploading your file.";
             }
@@ -45,22 +43,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Insert data into the sales table
     if (empty($message)) {
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO sales (customer_name, quantity, item_id, total_amount, payment_type, due_date, transaction_number, bank_statement, user_id, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$customer_name, $quantity, $item_id, $total_amount, $payment_type, $due_date, $transaction_number, $bank_statement, $_SESSION['user_id'], 'pending']); // Added 'pending' status
 
+            INSERT INTO sales (customer_name, quantity, item_id, total_amount, payment_type, due_date, transaction_number, bank_statement, user_id, status)
+            
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            
+            ");
+            
+            $stmt->execute([$customer_name, $quantity, $item_id, $total_amount, $payment_type, $due_date, $transaction_number, $bank_statement, $_SESSION['user_id'], 'pending']); // Added 'pending' status
+            
             $message = "Sale created successfully!";
         } catch (PDOException $e) {
             $message = "Error creating sale: " . $e->getMessage();
         }
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -87,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         h1 {
             margin-bottom: 20px;
             text-align: center;
-            color: #0a888f; /* Updated heading color */
+            color: #0a888f;
         }
         form {
             display: flex;
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         button {
             padding: 10px;
-            background-color: #0a888f; /* Button color */
+            background-color: #0a888f;
             color: white;
             border: none;
             border-radius: 5px;
@@ -121,12 +121,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transition: background 0.3s;
         }
         button:hover {
-            background-color: #0a7b7f; /* Darker shade on hover */
+            background-color: #0a7b7f;
         }
         .message {
             margin-bottom: 20px;
             text-align: center;
-            color: #d9534f; /* Red color for error messages */
+            color: #d9534f;
         }
         #bank_statement_container {
             display: none;
@@ -136,7 +136,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         function clearForm() {
             document.getElementById("customer_name").value = "";
             document.getElementById("quantity").value = 1;
-            document.getElementById("item_id").selectedIndex = 0; // Changed product_id to item_id
+            document.getElementById("item_id").selectedIndex = 0;
+            document.getElementById("selling_price").value = "";
             document.getElementById("total_amount").value = "";
             document.getElementById("due_date").value = "";
             document.getElementById("transaction_number").value = "";
@@ -144,16 +145,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         function updateTotal() {
-            const quantity = document.getElementById("quantity").value;
-            const price = document.getElementById("item_id").options[document.getElementById("item_id").selectedIndex].getAttribute("data-price"); // Changed product_id to item_id
-            document.getElementById("total_amount").value = (quantity * price).toFixed(2);
+            const quantity = parseFloat(document.getElementById("quantity").value) || 0;
+            const selling_price = parseFloat(document.getElementById("selling_price").value) || 0;
+            const total = quantity * selling_price;
+            document.getElementById("total_amount").value = total.toFixed(2);
         }
 
-          document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function() {
             var paymentTypeSelect = document.getElementById("payment_type");
             var bankStatementContainer = document.getElementById("bank_statement_container");
 
-            // Function to toggle visibility of bank statement fields
             function toggleBankStatementFields() {
                 if (paymentTypeSelect.value === "Cash") {
                     bankStatementContainer.style.display = "block";
@@ -162,10 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // Initial visibility check
             toggleBankStatementFields();
-
-            // Event listener for payment type changes
             paymentTypeSelect.addEventListener("change", toggleBankStatementFields);
         });
     </script>
@@ -186,15 +184,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="number" id="quantity" name="quantity" min="1" value="1" required onchange="updateTotal()">
             </div>
             <div>
-                <label for="item_id">Product:</label> <!-- Changed product_id to item_id -->
-                <select id="item_id" name="item_id" required onchange="updateTotal()"> <!-- Changed product_id to item_id -->
+                <label for="item_id">Product:</label>
+                <select id="item_id" name="item_id" required>
                     <option value="" disabled selected>Select a product</option>
                     <?php foreach ($products as $product): ?>
-                        <option value="<?php echo $product['item_id']; ?>" data-price="<?php echo $product['unit_price']; ?>">
+                        <option value="<?php echo $product['item_id']; ?>">
                             <?php echo htmlspecialchars($product['item_name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
+            </div>
+            <div>
+                <label for="selling_price">Selling Price:</label>
+                <input type="number" id="selling_price" name="selling_price" step="0.01" min="0" required onchange="updateTotal()">
             </div>
             <div>
                 <label for="total_amount">Total Amount:</label>
@@ -203,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div>
                 <label for="payment_type">Payment Type:</label>
                 <select id="payment_type" name="payment_type" required>
-                    <option value="Credit" selected>Credit</option> <!-- Credit set as default -->
+                    <option value="Credit" selected>Credit</option>
                     <option value="Cash">Cash</option>
                 </select>
             </div>
