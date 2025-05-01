@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_SESSION['email'];
 
     // Update the password in the database
-    $stmt = $pdo->prepare("UPDATE employees SET password = ? WHERE email = ?");
+    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
     if ($stmt->execute([$new_password, $email])) {
         echo "Password has been reset successfully.";
         // Clear the session variables
