@@ -19,7 +19,7 @@
 
         /* Sidebar Styles */
         .sidebar {
-            width: 280px; /* Increased width */
+            width: 240px; /* Increased width */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradient background */
             color: white;
             position: fixed;
@@ -119,7 +119,10 @@
 
         /* Content Styles */
         .content {
-        
+    /*         margin-left: 280px;
+            padding: 30px;
+            flex-grow: 1;
+            transition: margin-left 0.3s ease; */
         }
 
         .content.shifted {
@@ -132,7 +135,7 @@
             top: 20px;
             left: 20px;
             z-index: 101;
-            color: ;
+            color: #667eea;
             font-size: 2em;
             cursor: pointer;
             background: none;
@@ -200,10 +203,14 @@
                 </a>
             </li>
             <li>
-                <a href="manage_bank.php">
+                <button onclick="toggleSubMenu('manageBankSubMenu')">
                     <i class="fa-solid fa-university"></i>
-                    Manage Bank
-                </a>
+                    Manage Bank <i class="fa-solid fa-caret-down" style="margin-left: auto;"></i>
+                </button>
+                <ul id="manageBankSubMenu" class="submenu">
+                    <li><a href="add_bank.php">Add Bank</a></li>
+                    <li><a href="view_banks.php">View Banks</a></li>
+                </ul>
             </li>
             <li>
                 <a href="manage_finance.php">

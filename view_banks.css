@@ -1,0 +1,76 @@
+/* view_banks.css */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f9;
+    color: #343a40;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    margin-left: 280px; /* Adjust to match your sidebar width */
+    padding: 30px;
+}
+
+h2 {
+    color: #007bff;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+tbody tr:hover {
+    background-color: #ddd;
+    transition: background-color 0.3s ease;
+}
+
+.no-banks {
+    text-align: center;
+    margin-top: 30px;
+    font-style: italic;
+    color: #6c757d;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        margin-left: 20px;
+        padding: 20px;
+    }
+
+    table {
+        box-shadow: none;
+    }
+
+    th, td {
+        padding: 8px 10px;
+        font-size: 0.9em;
+    }
+}
