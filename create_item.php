@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $invoice_amount = $_POST['invoice_amount'];
     $invoice_amount_birr = $_POST['invoice_amount_birr'];
     $country_of_origin = $_POST['country_of_origin'];
-    $expire_date = $_POST[expire_date];
+    $expire_date = $_POST['expire_date'];
 
     // Prepare the insert statement
     $stmt = $pdo->prepare("
