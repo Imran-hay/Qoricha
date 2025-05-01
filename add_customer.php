@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $tin = $_POST['tin'];
 
     // Insert into database
-    $stmt = $pdo->prepare("INSERT INTO customers (name, email, phone, address, tin) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO customers (customer_id, name, email, phone, address, tin) VALUES (?,?, ?, ?, ?, ?)");
     if ($stmt->execute([$name, $email, $phone, $address, $tin])) {
         $success_message = "Customer added successfully!";
     } else {

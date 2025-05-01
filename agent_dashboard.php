@@ -10,23 +10,24 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
 require 'config.php';
 
 // Fetch user information
-$stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
+// Fetch user information
+$stmt = $pdo->prepare("SELECT id, fullname, email, role, address, phone, tin, joining_date, region FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Fetch statistics using agent_id
-$total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE agent_id = ?");
+$total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?");
 $total_sales_stmt->execute([$_SESSION['user_id']]);
 $total_sales = $total_sales_stmt->fetchColumn();
 
-$daily_sales_stmt = $pdo->prepare("SELECT SUM(quantity) FROM sales WHERE agent_id = ? AND DATE(sale_date) = CURDATE()");
+$daily_sales_stmt = $pdo->prepare("SELECT SUM(quantity) FROM sales WHERE user_id = ? AND DATE(sale_date) = CURDATE()");
 $daily_sales_stmt->execute([$_SESSION['user_id']]);
 $daily_sales = $daily_sales_stmt->fetchColumn();
 
 // Calculate commissions based on sales
 $commissions_earned = $daily_sales * 0.0001; // 0.01% of daily sales
 
-$recent_orders_stmt = $pdo->prepare("SELECT * FROM sales WHERE agent_id = ? ORDER BY sale_date DESC LIMIT 5");
+$recent_orders_stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? ORDER BY sale_date DESC LIMIT 5");
 $recent_orders_stmt->execute([$_SESSION['user_id']]);
 $recent_orders = $recent_orders_stmt->fetchAll(PDO::FETCH_ASSOC);
 
