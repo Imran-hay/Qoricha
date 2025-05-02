@@ -4,187 +4,306 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --text-color: #f8fafc;
+            --hover-color: #3b82f6;
+            --submenu-bg: rgba(30, 64, 175, 0.8);
+            --sidebar-bg: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background-color: #f1f5f9;
             display: flex;
+            min-height: 100vh;
         }
+        
+        /* Sidebar Styling */
         .sidebar {
-            width: 250px;
-            background-color:rgb(194, 221, 223);
+            width: 280px;
+            background: var(--sidebar-bg);
             height: 100vh;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
             position: fixed;
             left: 0;
             top: 0;
-            transition: transform 0.3s ease;
+            transition: var(--transition);
             overflow-y: auto;
+            z-index: 100;
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
+        
         .sidebar.hidden {
             transform: translateX(-100%);
         }
-        .sidebar h2 {
-            color: white;
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
             text-align: center;
         }
+        
+        .sidebar-header img {
+            max-width: 80%;
+            height: auto;
+            filter: brightness(0) invert(1);
+            transition: var(--transition);
+        }
+        
+        .sidebar:hover .sidebar-header img {
+            transform: scale(1.05);
+        }
+        
         .sidebar ul {
             list-style: none;
-            padding: 0;
+            padding: 0 15px;
         }
+        
         .sidebar ul li {
-            margin: 15px 0;
-            align-items: center; /* Align icons and text */
+            margin: 8px 0;
+            position: relative;
         }
+        
         .sidebar ul li a, .toggle-button {
-            color: black;
+            color: var(--text-color);
             text-decoration: none;
-            padding: 10px;
+            padding: 12px 15px;
             display: flex;
             align-items: center;
-            border-radius: 4px;
-            transition: background 0.3s;
+            border-radius: 8px;
+            transition: var(--transition);
             background-color: transparent;
             border: none;
             width: 100%;
             cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
         }
+        
         .sidebar ul li a:hover, .toggle-button:hover {
-            background-color: #0a888f;
+            background-color: var(--hover-color);
+            transform: translateX(5px);
         }
-        .icon-only i {
-            margin-right: 10px; /* Add space between icon and text */
+        
+        .sidebar ul li.active a {
+            background-color: var(--accent-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        
+        .icon {
+            margin-right: 12px;
+            font-size: 18px;
+            min-width: 24px;
+            text-align: center;
+        }
+        
         .submenu {
-            display: none; /* Initially hide submenu */
-            padding-left: 15px; /* Indent submenus */
-            margin-top: 5px; /* Space above submenus */
-            background-color: ; /* Match sidebar background */
+            display: none;
+            padding-left: 10px;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease-out;
         }
-        .submenu li {
-            margin: 5px 0; /* Space between submenu items */
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        
+        .submenu li a {
+            padding: 10px 15px 10px 40px;
+            font-size: 14px;
+            background-color: var(--submenu-bg);
+            border-radius: 6px;
+            margin: 4px 0;
+        }
+        
+        .submenu li a:hover {
+            background-color: var(--hover-color);
+        }
+        
+        .submenu li a::before {
+            content: "→";
+            position: absolute;
+            left: 20px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        
+        .submenu li a:hover::before {
+            opacity: 1;
+            left: 25px;
+        }
+        
+        .toggle-button .arrow {
+            margin-left: auto;
+            transition: var(--transition);
+        }
+        
+        .toggle-button.active .arrow {
+            transform: rotate(180deg);
+        }
+        
         .content {
-            margin-left: 270px; /* Account for sidebar width */
-            padding: 20px;
+            margin-left: 280px;
+            padding: 30px;
             flex-grow: 1;
-            transition: margin-left 0.3s ease;
+            transition: var(--transition);
         }
-        .icon-only span {
-            display: inline; /* Show text */
+        
+        .content.expanded {
+            margin-left: 0;
         }
-        .sidebar.hidden .icon-only span {
-            display: none; /* Hide text when sidebar is collapsed */
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .sidebar.hidden {
-                transform: translateX(0);
-            }
-            .content {
-                margin-left: 0;
-            }
-            .sidebar ul li span {
-                display: none; /* Hide text on small screens */
-            }
-        }
+        
         /* Hamburger button styling */
         .hamburger-button {
             position: fixed;
-            left: 5px;
+            left: 20px;
             top: 20px;
             z-index: 1000;
-            color: black;
-            font-size: 30px;
+            color: var(--primary-color);
+            font-size: 24px;
             cursor: pointer;
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        
+        .hamburger-button:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Floating notification badge */
+        .badge {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 260px;
+            }
+            
+            .sidebar.hidden {
+                transform: translateX(0);
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+        }
+        
+        /* Glow effect on hover */
+        .sidebar ul li a:hover, .toggle-button:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Subtle pulse animation for active items */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        
+        .sidebar ul li.active a {
+            animation: pulse 1.5s infinite;
         }
     </style>
-    <script>
-        let showIconsOnly = false; // State to toggle between icons and text
-
-        function toggleSubMenu(id) {
-            const submenu = document.getElementById(id);
-            // Toggle display style between block and none
-            submenu.style.display = submenu.style.display === "block" ? "none" : "block";
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const content = document.querySelector('.content');
-
-            sidebar.classList.toggle('hidden'); // Toggle sidebar visibility
-
-            // Adjust content margin based on sidebar state
-            if (sidebar.classList.contains('hidden')) {
-                content.style.marginLeft = '0'; // No margin when sidebar is hidden
-            } else {
-                content.style.marginLeft = '250px'; // Adjust based on sidebar width
-            }
-
-            // Toggle between showing only icons and showing icons with text
-            showIconsOnly = !showIconsOnly;
-            const items = document.querySelectorAll('.sidebar ul li');
-            items.forEach(item => {
-                const text = item.querySelector('span');
-                if (text) {
-                    text.style.display = showIconsOnly ? 'none' : 'inline'; // Toggle text visibility
-                }
-            });
-        }
-    </script>
 </head>
 <body>
-    <i class="fa-solid fa-bars hamburger-button" onclick="toggleSidebar()"></i>
+    <div class="hamburger-button" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+    </div>
+    
     <div class="sidebar">
-    <h2><img src="images/Qoricha logo.png" alt="Company Logo" style="max-width: 100%; height: auto;"></h2>
+        <div class="sidebar-header">
+            <!-- <img src="images/Qorichalogo.png" alt="Qoricha Logo"> -->
+        </div>
+        
         <ul>
-            <li class="icon-only">
+            <li class="icon-only active">
                 <a href="agent_dashboard.php">
-                    <i class="fa-solid fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
+                    <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="text">Dashboard</span>
                 </a>
             </li>
+            
             <li class="icon-only">
-                <button class="toggle-button" onclick="toggleSubMenu('manageSalesSubMenu')">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    <span>Manage Sales ▼</span>
+                <button class="toggle-button" onclick="toggleSubMenu(this, 'manageSalesSubMenu')">
+                    <span class="icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                    <span class="text">Manage Sales</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+                  
                 </button>
                 <ul id="manageSalesSubMenu" class="submenu">
                     <li><a href="create_sale.php">Create New Sale</a></li>
-                    <li><a href="pending_approvals.php">View Pending Approvals</a></li>
+                    <li><a href="pending_approvals.php">Pending Approvals</a></li>
+                    <li><a href="add_repayment.php">Add Repayment</a></li>
                 </ul>
             </li>
+            
             <li class="icon-only">
-                <button class="toggle-button" onclick="toggleSubMenu('manageCustomersSubMenu')">
-                    <i class="fa-solid fa-users"></i>
-                    <span>Manage Customers ▼</span>
+                <button class="toggle-button" onclick="toggleSubMenu(this, 'manageCustomersSubMenu')">
+                    <span class="icon"><i class="fa-solid fa-users-gear"></i></span>
+                    <span class="text">Manage Customers</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
                 <ul id="manageCustomersSubMenu" class="submenu">
                     <li><a href="add_customer.php">Add New Customer</a></li>
                     <li><a href="view_customers.php">View Customer List</a></li>
                 </ul>
             </li>
+            
             <li class="icon-only">
-                <button class="toggle-button" onclick="toggleSubMenu('hostedCustomersSubMenu')">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Hosted Customers ▼</span>
+                <button class="toggle-button" onclick="toggleSubMenu(this, 'hostedCustomersSubMenu')">
+                    <span class="icon"><i class="fa-solid fa-house-chimney-user"></i></span>
+                    <span class="text">Hosted Customers</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+               
                 </button>
                 <ul id="hostedCustomersSubMenu" class="submenu">
-                    <li><a href="todays_hosted.php">Today’s Hosted</a></li>
-                    <li><a href="this_month_hosted.php">This Month’s Hosted</a></li>
+                    <li><a href="todays_hosted.php">Today's Hosted</a></li>
+                    <li><a href="this_month_hosted.php">This Month's Hosted</a></li>
                     <li><a href="all_hosted.php">View All Hosted</a></li>
                 </ul>
             </li>
+            
             <li class="icon-only">
-                <button class="toggle-button" onclick="toggleSubMenu('reportsSubMenu')">
-                    <i class="fa-solid fa-chart-pie"></i>
-                    <span>Reports ▼</span>
+                <button class="toggle-button" onclick="toggleSubMenu(this, 'reportsSubMenu')">
+                    <span class="icon"><i class="fa-solid fa-chart-simple"></i></span>
+                    <span class="text">Reports & Analytics</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
                 <ul id="reportsSubMenu" class="submenu">
                     <li><a href="item_list.php">Item List</a></li>
@@ -193,20 +312,79 @@
                     <li><a href="commission_earned.php">Commission Earned</a></li>
                 </ul>
             </li>
+            
             <li class="icon-only">
                 <a href="view_bank.php">
-                    <i class="fa-solid fa-building"></i>
-                    <span>View Bank Account List</span>
+                    <span class="icon"><i class="fa-solid fa-building-columns"></i></span>
+                    <span class="text">Bank Accounts</span>
                 </a>
             </li>
-            <li class="icon-only">
+            
+            <li class="icon-only logout">
                 <a href="logout.php">
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                    <span class="text">Logout</span>
                 </a>
             </li>
         </ul>
     </div>
-   
+    
+    <div class="content">
+        <!-- Your main content goes here -->
+    </div>
+
+    <script>
+        function toggleSubMenu(button, id) {
+            const submenu = document.getElementById(id);
+            const isActive = button.classList.contains('active');
+            
+            // Close all other submenus first
+            document.querySelectorAll('.submenu').forEach(menu => {
+                if (menu.id !== id) {
+                    menu.style.display = 'none';
+                    menu.previousElementSibling.classList.remove('active');
+                }
+            });
+            
+            // Toggle current submenu
+            submenu.style.display = isActive ? 'none' : 'block';
+            button.classList.toggle('active');
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const content = document.querySelector('.content');
+            
+            sidebar.classList.toggle('hidden');
+            content.classList.toggle('expanded');
+            
+            // Store state in localStorage
+            const isHidden = sidebar.classList.contains('hidden');
+            localStorage.setItem('sidebarHidden', isHidden);
+        }
+        
+        // Check localStorage on load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('sidebarHidden') === 'true') {
+                toggleSidebar();
+            }
+            
+            // Set active menu item based on current page
+            const currentPage = window.location.pathname.split('/').pop();
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.parentElement.classList.add('active');
+                    
+                    // Open parent submenu if this is a submenu item
+                    const submenuItem = link.closest('.submenu');
+                    if (submenuItem) {
+                        submenuItem.style.display = 'block';
+                        const toggleButton = submenuItem.previousElementSibling;
+                        toggleButton.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
