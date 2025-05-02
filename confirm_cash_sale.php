@@ -197,7 +197,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 20px;
         }
         .content {
-            margin-left: 220px; /* Adjust for sidebar width */
+            margin-left: 100px; /* Adjust for sidebar width */
             padding: 20px;
             background: #fff;
             border-radius: 5px;

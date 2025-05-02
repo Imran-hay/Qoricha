@@ -390,11 +390,19 @@
                 </ul>
             </li>
             
-            <li>
+         <!--    <li>
                 <a href="account_settings.php">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-user-gear"></i></span>
                     <span class="text">Account Settings</span>
+                </a>
+            </li> -->
+
+            <li>
+                <a href="register.php">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-user-gear"></i></span>
+                    <span class="text">Register User</span>
                 </a>
             </li>
         </ul>

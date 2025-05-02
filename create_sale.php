@@ -99,14 +99,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-family: 'Ubuntu', sans-serif;
             background-color: #f9f9f9;
             color: #333;
+            margin-left: 280px; /* Adjust for sidebar width */
         }
         .content {
-            padding: 20px;
+            padding: 30px;
+            padding-right: 50px;
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             max-width: 600px;
             margin: 20px auto;
+            margin-left: 80px; /* Adjust for sidebar width */
         }
         h1 {
             margin-bottom: 20px;

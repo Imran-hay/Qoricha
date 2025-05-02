@@ -159,7 +159,7 @@
             margin-left: 280px;
             padding: 30px;
             flex-grow: 1;
-            transition: var(--transition);
+            transition: var(--transition); 
         }
         
         .content.expanded {
@@ -285,7 +285,7 @@
                 </ul>
             </li>
             
-            <li class="icon-only">
+      <!--       <li class="icon-only">
                 <button class="toggle-button" onclick="toggleSubMenu(this, 'hostedCustomersSubMenu')">
                     <span class="icon"><i class="fa-solid fa-house-chimney-user"></i></span>
                     <span class="text">Hosted Customers</span>
@@ -297,9 +297,9 @@
                     <li><a href="this_month_hosted.php">This Month's Hosted</a></li>
                     <li><a href="all_hosted.php">View All Hosted</a></li>
                 </ul>
-            </li>
+            </li> -->
             
-            <li class="icon-only">
+       <!--      <li class="icon-only">
                 <button class="toggle-button" onclick="toggleSubMenu(this, 'reportsSubMenu')">
                     <span class="icon"><i class="fa-solid fa-chart-simple"></i></span>
                     <span class="text">Reports & Analytics</span>
@@ -311,7 +311,7 @@
                     <li><a href="credit_sales.php">Credit Sales</a></li>
                     <li><a href="commission_earned.php">Commission Earned</a></li>
                 </ul>
-            </li>
+            </li> -->
             
             <li class="icon-only">
                 <a href="view_bank.php">
@@ -328,10 +328,7 @@
             </li>
         </ul>
     </div>
-    
-    <div class="content">
-        <!-- Your main content goes here -->
-    </div>
+
 
     <script>
         function toggleSubMenu(button, id) {

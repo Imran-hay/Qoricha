@@ -313,7 +313,7 @@
                 </ul>
             </li>
             
-            <li>
+      <!--       <li>
                 <button onclick="toggleSubMenu(this, 'invoicesSubMenu')">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-receipt"></i></span>
@@ -325,7 +325,7 @@
                     <li><a href="credit_invoices.php">Credit Invoices</a></li>
                     <li><a href="hosted_invoices.php">Hosted Invoices</a></li>
                 </ul>
-            </li>
+            </li> -->
             
             <li>
                 <button onclick="toggleSubMenu(this, 'creditRepaySubMenu')">
@@ -341,22 +341,22 @@
                 </ul>
             </li>
             
-            <li>
+       <!--      <li>
                 <a href="check_availability.php">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-box-open"></i></span>
                     <span class="text">Check Availability</span>
                 </a>
-            </li>
+            </li> -->
             
-            <li>
+       <!--      <li>
                 <a href="account_settings.php">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-user-cog"></i></span>
                     <span class="text">Account Settings</span>
                 </a>
             </li>
-            
+             -->
             <li class="logout">
                 <a href="logout.php">
                     <span class="highlight"></span>

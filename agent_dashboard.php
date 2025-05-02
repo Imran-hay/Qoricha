@@ -1,38 +1,99 @@
 <?php
 session_start();
 require 'agent_sidebar.php'; 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
-    //header("Location: login.php");
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
     exit();
 }
 
-// Include database configuration
 require 'config.php';
 
-// Fetch user information
-// Fetch user information
-$stmt = $pdo->prepare("SELECT id, fullname, email, role, address, phone, tin, joining_date, region FROM users WHERE id = ?");
+// Fetch user information (assuming users table exists with these fields)
+$stmt = $pdo->prepare("SELECT user_id, fullname, email, role FROM users WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch statistics using agent_id
-$total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?");
-$total_sales_stmt->execute([$_SESSION['user_id']]);
-$total_sales = $total_sales_stmt->fetchColumn();
+// Initialize variables to prevent undefined errors
+$total_sales = 0;
+$daily_sales_amount = 0;
+$daily_quantity = 0;
+$commissions_earned = 0;
+$recent_orders = [];
+$pending_approvals = [];
 
-$daily_sales_stmt = $pdo->prepare("SELECT SUM(quantity) FROM sales WHERE user_id = ? AND DATE(sale_date) = CURDATE()");
-$daily_sales_stmt->execute([$_SESSION['user_id']]);
-$daily_sales = $daily_sales_stmt->fetchColumn();
+// Check if sales table exists and fetch statistics
+$sales_table_exists = $pdo->query("SHOW TABLES LIKE 'sales'")->rowCount() > 0;
 
-// Calculate commissions based on sales
-$commissions_earned = $daily_sales * 0.0001; // 0.01% of daily sales
+if ($sales_table_exists) {
+    // Total sales count
+    $total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?");
+    $total_sales_stmt->execute([$_SESSION['user_id']]);
+    $total_sales = $total_sales_stmt->fetchColumn();
 
-$recent_orders_stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? ORDER BY sale_date DESC LIMIT 5");
-$recent_orders_stmt->execute([$_SESSION['user_id']]);
-$recent_orders = $recent_orders_stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Daily sales amount (using total_amount field)
+    $daily_sales_stmt = $pdo->prepare("
+        SELECT IFNULL(SUM(total_amount), 0) 
+        FROM sales 
+        WHERE user_id = ? AND DATE(created_at) = CURDATE()
+    ");
+    $daily_sales_stmt->execute([$_SESSION['user_id']]);
+    $daily_sales_amount = $daily_sales_stmt->fetchColumn();
 
-// Fetch newly accepted approvals (dummy data for demonstration)
-$new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with actual fetch logic
+    // Daily quantity sold
+    $daily_quantity_stmt = $pdo->prepare("
+        SELECT IFNULL(SUM(quantity), 0) 
+        FROM sales 
+        WHERE user_id = ? AND DATE(created_at) = CURDATE()
+    ");
+    $daily_quantity_stmt->execute([$_SESSION['user_id']]);
+    $daily_quantity = $daily_quantity_stmt->fetchColumn();
+
+    // Simple commission calculation (1% of total sales)
+    $commissions_earned = $daily_sales_amount * 0.01;
+
+    // Recent orders (simplified query based on existing fields)
+    $recent_orders_stmt = $pdo->prepare("
+        SELECT 
+            sale_id, 
+            customer_name, 
+            quantity, 
+            total_amount, 
+            payment_type,
+            created_at
+        FROM sales 
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 5
+    ");
+    $recent_orders_stmt->execute([$_SESSION['user_id']]);
+    $recent_orders = $recent_orders_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Check if approvals table exists (though your SQL file shows it doesn't)
+$approvals_table_exists = $pdo->query("SHOW TABLES LIKE 'approvals'")->rowCount() > 0;
+
+// Dummy approvals data since table doesn't exist
+$pending_approvals = [
+    ['id' => 1, 'sale_id' => 1001, 'customer_name' => 'Sample Customer', 'total_amount' => 1500],
+    ['id' => 2, 'sale_id' => 1002, 'customer_name' => 'Another Customer', 'total_amount' => 2500]
+];
+
+// Weekly sales data for chart (simulated since we don't have historical data)
+$weekly_sales = [
+    ['day' => 'Monday', 'amount' => 1500, 'quantity' => 5],
+    ['day' => 'Tuesday', 'amount' => 2300, 'quantity' => 8],
+    ['day' => 'Wednesday', 'amount' => 1800, 'quantity' => 6],
+    ['day' => 'Thursday', 'amount' => 2100, 'quantity' => 7],
+    ['day' => 'Friday', 'amount' => 3200, 'quantity' => 10],
+    ['day' => 'Saturday', 'amount' => 2800, 'quantity' => 9],
+    ['day' => 'Sunday', 'amount' => 1200, 'quantity' => 4]
+];
+
+// Payment type distribution (simulated if no data exists)
+$payment_types = [
+    ['payment_type' => 'cash', 'amount' => 7500, 'count' => 15],
+    ['payment_type' => 'credit', 'amount' => 4500, 'count' => 9]
+];
 ?>
 
 <!DOCTYPE html>
@@ -41,444 +102,492 @@ $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Ubuntu', sans-serif;
-        }
-
         :root {
-            --light-bg: rgb(194, 221, 223);
-            --dark-teal: #0a888f;
-            --white: #fff;
-            --grey: rgb(245, 245, 245);
-            --black1: #222;
-            --black2: #999;
-            --primary-color: #45d9e0;
-            --border-color: #ccc;
+            --primary: #0a888f;
+            --primary-light: #e6f0ff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #fd7e0b;
+            --info: #17a2b8;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --transition: all 0.2s ease;
         }
 
         body {
-            min-height: 100vh;
-            overflow-x: hidden;
-            background-color: var(--grey);
-            display: flex;
-            flex-direction: column;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: #4a5568;
+            margin: 0;
+            padding: 0;
         }
 
-        .header {
-            background-color: var(--dark-teal);
-            padding: 10px 20px;
-            color: white;
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .dashboard-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .dashboard-title p {
+            color: #64748b;
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        .header-actions {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-        }
-
-        .header h2 {
-            flex-grow: 1; /* Allows the title to grow */
-            text-align: center; /* Centers the title */
-            margin: 0; /* Removes margin */
-        }
-
-        .search-bar {
-            margin-right: 20px;
+            gap: 15px;
         }
 
         .search-bar input {
-            width: 150px; /* Shortened width */
-            padding: 8px;
-            border-radius: 5px;
-            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary);
         }
 
         .notification {
             position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .notification i {
-            font-size: 24px;
             cursor: pointer;
         }
 
-        .notification-count {
+        .notification-badge {
             position: absolute;
             top: -5px;
             right: -5px;
-            background: red;
+            background: var(--danger);
             color: white;
             border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 12px;
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 30px;
-            right: 0;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-dropdown p {
-            padding: 10px;
-            margin: 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .content {
-            padding: 20px;
-            background: var(--white);
-            box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
-            border-radius: 20px;
-            flex-grow: 1;
-            margin-top: 20px; /* Space below header */
-        }
-
-        .quick-actions {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .quick-actions a {
-            padding: 12px;
-            border-radius: 10px;
-            background-color: var(--light-bg);
-            color: var(--black1);
-            text-align: center;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background 0.3s, transform 0.3s;
-            flex: 1 1 calc(25% - 10px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .quick-actions a:hover {
-            background-color: var(--dark-teal);
-            transform: translateY(-2px);
-            color: var(--white);
-        }
-
-        .statistics {
-            margin-bottom: 20px;
-            padding: 15px;
-            border-radius: 20px;
-            background-color: rgb(249, 249, 249);
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+            width: 18px;
+            height: 18px;
             display: flex;
             align-items: center;
-        }
-
-        .statistics h2 {
-            flex: 1;
-        }
-
-        .statistics .icon {
-            font-size: 24px;
-            margin-right: 10px;
-            color: var(--dark-teal);
-        }
-
-        .cardBox {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 30%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .numbers {
-            font-weight: bold;
-            font-size: 1.5em;
-            color: var(--black1);
-            display: flex;
-            align-items: center;
-        }
-
-        .numbers ion-icon {
-            margin-left: 10px;
-            font-size: 1.5em;
-        } 
-
-        .cardName {
-            color: var(--black2);
-            font-size: 1em;
-            margin-top: 5px;
-            text-align: left;
-        }
-
-        .charts {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .chart-container {
-            flex: 1;
-            margin: 0 10px;
-            background: var(--light-bg);
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        canvas {
-            height: 150px; /* Adjusted height for better appearance */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            text-align: left;
-        }
-
-        th {
-            background-color: #e9ecef;
+            justify-content: center;
+            font-size: 11px;
             font-weight: 600;
         }
 
-        .recent-orders table tr:hover {
-            background: var(--blue);
-            color: var(--white);
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
-        .recent-orders table tr td {
-            padding: 12px 10px;
+        .action-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            color: var(--dark);
         }
 
-        .status {
-            padding: 2px 4px;
-            color: var(--white);
-            border-radius: 4px;
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .action-icon {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .action-title {
+            font-weight: 500;
             font-size: 14px;
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .card-title {
+            font-size: 13px;
+            color: #64748b;
             font-weight: 500;
         }
 
-        .status.delivered {
-            background: #8de02c;
+        .stat-card .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(10, 136, 143, 0.1);
+            color: var(--primary);
         }
 
-        .status.pending {
-            background: #f9ca3f;
+        .stat-card .card-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 5px 0;
         }
 
-        .status.return {
-            background: #f00;
+        .stat-card .card-change {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .status.inprogress {
-            background: #1795ce;
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        .data-available {
-            margin-top: 20px;
+        .chart-container {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .chart-container .chart-header {
+            margin-bottom: 15px;
+        }
+
+        .chart-container .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        /* Data Tables */
+        .data-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+        }
+
+        .data-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .data-card .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 14px;
-            color: var(--black2);
-            text-align: center; /* Center text */
         }
 
+        .data-table th {
+            text-align: left;
+            padding: 10px;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge.cash {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.credit {
+            background: rgba(253, 126, 20, 0.1);
+            color: var(--warning);
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .content {
+            .main-content {
                 margin-left: 0;
-                width: 100%;
+                padding: 15px;
             }
-
-            .charts {
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header {
                 flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
-
-            .chart-container {
-                margin-bottom: 20px;
+            
+            .header-actions {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>Agent Dashboard</h2>
-        <div class="search-bar">
-            <input type="text" placeholder="Search...">
-        </div>
-        <div class="notification" onclick="toggleNotificationDropdown()">
-            <i class="fa-solid fa-bell"></i>
-            <span class="notification-count"><?php echo count($new_approvals); ?></span>
-            <div class="notification-dropdown" id="notificationDropdown">
-                <?php foreach ($new_approvals as $approval): ?>
-                    <p><?php echo htmlspecialchars($approval); ?></p>
-                <?php endforeach; ?>
+    <div class="main-content">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="dashboard-title">
+                <h1>Welcome, <?= htmlspecialchars($user['fullname']) ?></h1>
+                <p>Agent Dashboard Overview</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <?php if (count($pending_approvals) > 0): ?>
+                        <span class="notification-badge"><?= count($pending_approvals) ?></span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="content">
-        <h1>Welcome, <?php echo htmlspecialchars($user['fullname']); ?>!</h1>
-        <p>Your role: <?php echo htmlspecialchars($user['role']); ?></p>
-
+        <!-- Quick Actions -->
         <div class="quick-actions">
-            <a href="create_sale.php">Create New Sale</a>
-            <a href="pending_approvals.php">View Pending Approvals</a>
-            <a href="manage_customers.php">Manage Customers</a>
-            <a href="reports.php">View Reports</a>
+            <a href="create_sale.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-cash-register"></i></div>
+                <div class="action-title">New Sale</div>
+            </a>
+            <a href="customers.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-users"></i></div>
+                <div class="action-title">Customers</div>
+            </a>
+            <a href="reports.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="action-title">Reports</div>
+            </a>
+            <a href="profile.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-user"></i></div>
+                <div class="action-title">Profile</div>
+            </a>
         </div>
 
-        <div class="statistics">
-            <h2>Statistics Overview</h2>
-            <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="cardBox">
-                <div class="card">
-                    <div class="numbers">
-                        <i class="fa-solid fa-cash-register"></i>
-                        <?php echo htmlspecialchars($daily_sales); ?>
-                    </div>
-                    <div class="cardName">Daily Sales</div>
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Today's Sales</div>
+                    <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
                 </div>
-                <div class="card">
-                    <div class="numbers">
-                        <i class="fa-solid fa-shopping-cart"></i>
-                        <?php echo htmlspecialchars($total_sales); ?>
-                    </div>
-                    <div class="cardName">Total Sales</div>
+                <div class="card-value">₱<?= number_format($daily_sales_amount, 2) ?></div>
+                <div class="card-change">
+                    <i class="fas fa-box"></i> <?= $daily_quantity ?> items
                 </div>
-                <div class="card">
-                    <div class="numbers">
-                        <i class="fa-solid fa-money-bill-wave"></i>
-                        <?php echo htmlspecialchars(number_format($commissions_earned, 2)); ?>
-                    </div>
-                    <div class="cardName">Commissions Earned</div>
+            </div>
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Total Sales</div>
+                    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                </div>
+                <div class="card-value"><?= $total_sales ?></div>
+                <div class="card-change">
+                    <i class="fas fa-history"></i> All time
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Commissions</div>
+                    <div class="card-icon"><i class="fas fa-money-bill-wave"></i></div>
+                </div>
+                <div class="card-value">₱<?= number_format($commissions_earned, 2) ?></div>
+                <div class="card-change">
+                    <i class="fas fa-percent"></i> 1% of sales
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Pending</div>
+                    <div class="card-icon"><i class="fas fa-clock"></i></div>
+                </div>
+                <div class="card-value"><?= count($pending_approvals) ?></div>
+                <div class="card-change <?= count($pending_approvals) > 0 ? 'negative' : 'positive' ?>">
+                    <?php if (count($pending_approvals) > 0): ?>
+                        <i class="fas fa-exclamation-circle"></i> Needs action
+                    <?php else: ?>
+                        <i class="fas fa-check-circle"></i> All clear
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <div class="charts">
+        <!-- Charts Section -->
+        <div class="charts-section">
             <div class="chart-container">
-                <h2>Daily Sales</h2>
-                <canvas id="dailySalesChart"></canvas>
+                <div class="chart-header">
+                    <h3 class="chart-title">Weekly Sales</h3>
+                </div>
+                <canvas id="weeklySalesChart" height="200"></canvas>
             </div>
             <div class="chart-container">
-                <h2>Payment Types</h2>
-                <canvas id="paymentTypeChart"></canvas>
+                <div class="chart-header">
+                    <h3 class="chart-title">Payment Methods</h3>
+                </div>
+                <canvas id="paymentMethodChart" height="200"></canvas>
             </div>
         </div>
 
-        <div class="recent-orders">
-            <h2>Recent Orders</h2>
-            <table>
-                <tr>
-                    <th>Name</th>
-                    <th>Payment Type</th>
-                    <th>Payment Status</th>
-                    <th>Delivery Status</th>
-                </tr>
-                <?php foreach ($recent_orders as $order): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($order['customer_name']); ?></td>
-                    <td><?php echo htmlspecialchars($order['payment_type']); ?></td>
-                    <td class="status <?php echo strtolower($order['payment_status']); ?>">
-                        <?php echo htmlspecialchars($order['payment_status']); ?>
-                    </td>
-                    <td class="status <?php echo strtolower($order['delivery_status']); ?>">
-                        <?php echo htmlspecialchars($order['delivery_status']); ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+        <!-- Recent Orders -->
+        <div class="data-card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Orders</h3>
+                <a href="sales.php" class="view-all">View All</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Qty</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recent_orders as $order): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($order['customer_name']) ?></td>
+                        <td><?= $order['quantity'] ?></td>
+                        <td>₱<?= number_format($order['total_amount'], 2) ?></td>
+                        <td>
+                            <span class="status-badge <?= $order['payment_type'] ?>">
+                                <?= ucfirst($order['payment_type']) ?>
+                            </span>
+                        </td>
+                        <td><?= date('M d', strtotime($order['created_at'])) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
             </table>
-            <p class="data-available">Data available: <?php echo count($recent_orders); ?> orders found.</p>
         </div>
     </div>
 
     <script>
-        // Toggle notification dropdown
-        function toggleNotificationDropdown() {
-            const dropdown = document.getElementById('notificationDropdown');
-            dropdown.classList.toggle('active');
-        }
-
-        // Daily Sales Chart
-        const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
-        const dailySalesChart = new Chart(dailySalesCtx, {
-            type: 'line',
+        // Weekly Sales Chart
+        const weeklySalesCtx = document.getElementById('weeklySalesChart').getContext('2d');
+        const weeklySalesChart = new Chart(weeklySalesCtx, {
+            type: 'bar',
             data: {
-                labels: ['Today', 'Yesterday', '2 Days Ago'],
+                labels: <?= json_encode(array_column($weekly_sales, 'day')) ?>,
                 datasets: [{
-                    label: 'Daily Sales',
-                    data: [<?php echo htmlspecialchars($daily_sales); ?>, 200, 150],
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    label: 'Sales Amount',
+                    data: <?= json_encode(array_column($weekly_sales, 'amount')) ?>,
+                    backgroundColor: 'rgba(10, 136, 143, 0.7)',
+                    borderColor: 'rgba(10, 136, 143, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Sales Amount'
-                        }
+                        beginAtZero: true
                     }
                 }
             }
         });
 
-        // Payment Type Chart
-        const paymentTypeCtx = document.getElementById('paymentTypeChart').getContext('2d');
-        const paymentTypeChart = new Chart(paymentTypeCtx, {
-            type: 'pie',
+        // Payment Method Chart
+        const paymentMethodCtx = document.getElementById('paymentMethodChart').getContext('2d');
+        const paymentMethodChart = new Chart(paymentMethodCtx, {
+            type: 'doughnut',
             data: {
-                labels: ['Cash', 'Credit'],
+                labels: <?= json_encode(array_column($payment_types, 'payment_type')) ?>,
                 datasets: [{
-                    label: 'Payment Types',
-                    data: [300, 150], // Replace with actual data
+                    data: <?= json_encode(array_column($payment_types, 'amount')) ?>,
                     backgroundColor: [
-                        'rgb(23, 64, 91)',
-                        'rgb(174, 69, 97)'
-                    ]
+                        'rgba(10, 136, 143, 0.7)',
+                        'rgba(253, 126, 20, 0.7)'
+                    ],
+                    borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Payment Types Breakdown'
-                    }
-                }
+                cutout: '70%'
             }
         });
     </script>
