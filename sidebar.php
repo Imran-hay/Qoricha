@@ -119,10 +119,10 @@
 
         /* Content Styles */
         .content {
-    /*         margin-left: 280px;
+           
             padding: 30px;
             flex-grow: 1;
-            transition: margin-left 0.3s ease; */
+            transition: margin-left 0.3s ease;
         }
 
         .content.shifted {
@@ -135,7 +135,7 @@
             top: 20px;
             left: 20px;
             z-index: 101;
-            color: #667eea;
+            color:rgb(8, 9, 17);
             font-size: 2em;
             cursor: pointer;
             background: none;
@@ -191,7 +191,7 @@
         <h2 class="header">Admin Panel</h2>
         <ul>
             <li>
-                <a href="manage_stocks.php">
+                <a href="admin_dashboard.php">
                     <i class="fa-solid fa-tachometer-alt"></i>
                     Dashboard
                 </a>
@@ -212,13 +212,7 @@
                     <li><a href="view_banks.php">View Banks</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="manage_finance.php">
-                    <i class="fa-solid fa-money-bill-wave"></i>
-                    Manage Finance
-                </a>
-            </li>
-            <li>
+             <li>
                 <button onclick="toggleSubMenu('manageItemsSubMenu')">
                     <i class="fa-solid fa-box"></i>
                     Manage Items <i class="fa-solid fa-caret-down" style="margin-left: auto;"></i>

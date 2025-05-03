@@ -1,19 +1,25 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
-    header("Location: login.php");
-    exit();
+    /*header("Location: login.php");
+    exit()*/;
 }
 require 'agent_sidebar.php';
 require 'config.php';
 
 // Fetch sales approvals for the logged-in agent that are pending
-$stmt = $pdo->prepare("SELECT s.sale_id, s.customer_name, s.quantity, i.item_name, s.total_amount, s.due_date, s.payment_type, s.status
-                        FROM sales s
-                        JOIN items i ON s.item_id = i.item_id
-                        WHERE s.user_id = ? AND s.status = 'pending'");
-$stmt->execute([$_SESSION['user_id']]);
-$sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT s.sale_id, s.customer_name, s.quantity, i.item_name, s.total_amount, s.due_date, s.payment_type, s.status
+                            FROM sales s
+                            JOIN items i ON s.item_id = i.item_id
+                            WHERE s.user_id = ? AND s.status = 'pending'");
+    $stmt->execute([$_SESSION['user_id']]);
+    $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Database error fetching pending sales: " . $e->getMessage());
+    $sales = []; // Assign an empty array to avoid errors later
+    $message = "Error fetching pending sales: " . $e->getMessage(); // Optional: Display an error message
+}
 ?>
 
 <!DOCTYPE html>
@@ -22,45 +28,89 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Pending Sales</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* General body and content styles (consistent with dashboard) */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #343a40;
+            display: flex;
+            min-height: 100vh;
         }
+
         .content {
-            margin-left: 220px; /* Adjust for sidebar width */
+            flex-grow: 1;
             padding: 20px;
-            background: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-left: 240px; /* Sidebar width */
+            transition: margin-left 0.3s ease;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 900px; /* Increased max-width for table */
+            margin: 20px auto;
         }
+
+        .content.shifted {
+            margin-left: 0;
+        }
+
         h1 {
             margin-bottom: 20px;
+            text-align: center;
+            color: #764ba2; /* Consistent color */
         }
+
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
+
         th, td {
-            padding: 10px;
+            padding: 12px 15px;
             text-align: left;
-            border: 1px solid #ddd;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
         }
+
         th {
-            background: #f2f2f2;
+            background-color: #f9f9f9;
+            font-weight: 600;
         }
+
         tr:hover {
-            background: #f1f1f1;
+            background-color: #f5f5f5;
+        }
+
+        /* Message Styles */
+        .message {
+            margin-top: 20px;
+            text-align: center;
+            color: #d9534f;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+            }
+            th, td {
+                font-size: 14px;
+                padding: 8px 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="content">
         <h1>Pending Sales</h1>
+        <?php if (isset($message)): ?>
+            <p class="message"><?php echo htmlspecialchars($message); ?></p>
+        <?php endif; ?>
         <table>
             <thead>
                 <tr>

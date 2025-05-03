@@ -148,8 +148,8 @@
                     <span>Collect Credit Repay ▼</span>
                 </button>
                 <ul id="creditRepaySubMenu" class="submenu">
-                    <li><a href="add_repayment.php">Add Collected Repayment</a></li>
-                    <li><a href="withdraw_repayment.php">Withdraw Collected Repayment</a></li>
+                    <li><a href="repayments.php">Add Collected Repayment</a></li>
+            
                 </ul>
             </li>
             <li>

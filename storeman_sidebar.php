@@ -128,7 +128,7 @@
                 <ul id="manageInventorySubMenu" class="submenu">
                     <li><a href="add_stock.php">Add Stock</a></li>
                     <li><a href="view_stock.php">View Stock</a></li>
-                    <li><a href="add_item.php">Add Item</a></li> <!-- New Add Item link -->
+                    <li><a href="add_item.php">Add item</a></li> <!-- New Add Item link -->
                 </ul>
             </li>
             <li>

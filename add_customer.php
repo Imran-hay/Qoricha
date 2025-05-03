@@ -1,18 +1,18 @@
 <?php
 session_start();
-   
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
-    header("Location: login.php");
-    exit();
+    // exit();
 }
 
 require 'agent_sidebar.php';
 require 'config.php';
 
+// Initialize message variables outside the conditional block
+$success_message = "";
+$error_message = "";
+
 // Handle form submission
-$success_message = ""; // Initialize success message variable
-$error_message = ""; // Initialize error message variable
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get form data
     $name = $_POST['name'];
@@ -22,11 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $tin = $_POST['tin'];
 
     // Insert into database
-    $stmt = $pdo->prepare("INSERT INTO customers (customer_id, name, email, phone, address, tin) VALUES (?,?, ?, ?, ?, ?)");
-    if ($stmt->execute([$name, $email, $phone, $address, $tin])) {
-        $success_message = "Customer added successfully!";
-    } else {
-        $error_message = "Error adding customer.";
+    try {
+        $stmt = $pdo->prepare("INSERT INTO customers (name, email, phone, address, tin) VALUES (?, ?, ?, ?, ?)");
+        if ($stmt->execute([$name, $email, $phone, $address, $tin])) {
+            $success_message = "Customer added successfully!";
+        } else {
+            $error_message = "Error adding customer.";
+        }
+    } catch (PDOException $e) {
+        $error_message = "Database error: " . $e->getMessage();
     }
 }
 ?>
@@ -37,34 +41,53 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add New Customer</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* General body and content styles (consistent with dashboard) */
         body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #343a40;
+            display: flex;
+            min-height: 100vh;
         }
+
         .content {
+            flex-grow: 1;
             padding: 20px;
+            margin-left: 240px; /* Sidebar width */
+            transition: margin-left 0.3s ease;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 600px; /* Reduced max-width */
             margin: 20px auto;
         }
+
+        .content.shifted {
+            margin-left: 0;
+        }
+
         h1 {
             margin-bottom: 20px;
             text-align: center;
-            color: #0a888f; /* Updated heading color */
+            color: #764ba2; /* Consistent color */
         }
+
+        /* Form Styles */
         form {
             display: flex;
             flex-direction: column;
         }
+
         label {
             margin-bottom: 5px;
             font-weight: bold;
+            color: #555;
         }
+
         input[type="text"],
         input[type="email"],
         textarea {
@@ -73,27 +96,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        /* Button Styles */
         button {
-            padding: 10px;
-            background-color: #0a888f; /* Button color */
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Sidebar gradient */
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
             transition: background 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin-top: 10px;
         }
+
         button:hover {
-            background-color: #0a7b7f; /* Darker shade on hover */
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
+
+        /* Message Styles */
         .message {
             margin-bottom: 20px;
             text-align: center;
-            color: #d9534f; /* Red color for error messages */
+            padding: 10px;
+            border-radius: 5px;
+            display: <?php echo ($success_message != "" || $error_message != "") ? "block" : "none"; ?>; /* Conditionally show/hide */
         }
+
         .success {
-            color: #5cb85c; /* Green color for success */
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
@@ -101,11 +148,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="content">
         <h1>Add New Customer</h1>
 
-        <?php if (isset($error_message)): ?>
-            <div class="message"><?php echo htmlspecialchars($error_message); ?></div>
+        <?php if (isset($error_message) && $error_message != ""): ?>
+            <div class="message error"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
 
-        <?php if (isset($success_message)): ?>
+        <?php if (isset($success_message) &&  $success_message != ""): ?>
             <div class="message success"><?php echo htmlspecialchars($success_message); ?></div>
         <?php endif; ?>
 

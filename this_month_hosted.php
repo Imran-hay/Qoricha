@@ -1,20 +1,19 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
-    header("Location: login.php");
-    exit();
+   
 }
 require 'agent_sidebar.php'; // Include your sidebar for navigation
 require 'config.php'; // Include your database connection settings
 
 // Fetch customers who made purchases this month
 $stmt = $pdo->prepare("
-    SELECT c.customer_id, c.name, c.email, c.phone, c.tin_number 
+    SELECT c.customer_id, c.name, c.email, c.phone, c.tin 
     FROM customers c
     JOIN transactions t ON c.customer_id = t.customer_id
-    WHERE t.agent_id = :agent_id AND MONTH(t.created_at) = MONTH(CURDATE()) AND YEAR(t.created_at) = YEAR(CURDATE())
+    WHERE t.user_id = :user_id AND MONTH(t.created_at) = MONTH(CURDATE()) AND YEAR(t.created_at) = YEAR(CURDATE())
 ");
-$stmt->execute(['agent_id' => $_SESSION['user_id']]);
+$stmt->execute(['user_id' => $_SESSION['user_id']]);
 $this_month_customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -81,7 +80,7 @@ $this_month_customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <td><?php echo htmlspecialchars($customer['name']); ?></td>
                             <td><?php echo htmlspecialchars($customer['email']); ?></td>
                             <td><?php echo htmlspecialchars($customer['phone']); ?></td>
-                            <td><?php echo htmlspecialchars($customer['tin_number']); ?></td>
+                            <td><?php echo htmlspecialchars($customer['tin']); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>

@@ -2,7 +2,7 @@
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'storeman') {
     header("Location: login.php");
-    exit();
+    //exit();
 }
 require 'config.php'; // Include your database connection settings
 require 'storeman_sidebar.php'; // Include your sidebar for navigation

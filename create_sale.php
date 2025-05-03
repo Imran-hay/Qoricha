@@ -73,8 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             font-family: 'Ubuntu', sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
+            background-color: #f4f6f9;
+            color: #343a40;
         }
         .content {
             padding: 20px;
@@ -87,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         h1 {
             margin-bottom: 20px;
             text-align: center;
-            color: #0a888f;
+            color: #764ba2;
         }
         form {
             display: flex;
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         button {
             padding: 10px;
-            background-color: #0a888f;
+            background-color: #764ba2;
             color: white;
             border: none;
             border-radius: 5px;

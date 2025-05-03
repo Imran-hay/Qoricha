@@ -10,7 +10,7 @@ try {
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     echo "Error fetching items: " . htmlspecialchars($e->getMessage());
-    exit;
+     exit;
 }
 
 // Handle form submission
@@ -47,8 +47,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Redirect back to the same page to show the message
-    header("Location: add_stock.php");
-    exit;
+   // header("Location: add_stock.php");
+    //exit;
 }
 ?>
 

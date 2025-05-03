@@ -7,30 +7,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background-color: #f4f6f9; /* Light gray background */
+            color: #343a40; /* Dark gray text */
             display: flex;
+            min-height: 100vh;
         }
         .sidebar {
-            width: 250px;
-            background-color:rgb(194, 221, 223);
+            width: 240px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
             padding: 20px;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             position: fixed;
             left: 0;
             top: 0;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             overflow-y: auto;
+            padding: 20px;
+            z-index: 100;
         }
         .sidebar.hidden {
-            transform: translateX(-100%);
+           margin-left: -200px;
         }
         .sidebar h2 {
-            color: white;
-            text-align: center;
+            text-align: left;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
+            font-weight: 600;
+            font-size: 1.75em;
         }
         .sidebar ul {
             list-style: none;
@@ -38,54 +46,79 @@
         }
         .sidebar ul li {
             margin: 15px 0;
-            align-items: center; /* Align icons and text */
+             /* Align icons and text */
         }
         .sidebar ul li a, .toggle-button {
-            color: black;
+            color: white;
             text-decoration: none;
-            padding: 10px;
+            padding: 12px,15px;
             display: flex;
             align-items: center;
-            border-radius: 4px;
-            transition: background 0.3s;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3;
             background-color: transparent;
             border: none;
             width: 100%;
             cursor: pointer;
+            text-align: left;
+            font-size: 1em;
         }
         .sidebar ul li a:hover, .toggle-button:hover {
-            background-color: #0a888f;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #d4e157;
         }
         .icon-only i {
             margin-right: 10px; /* Add space between icon and text */
         }
+        .sidebar ul li a i, .sidebar ul li button i {
+            margin-right: 15px;
+            font-size: 1.2em;
+            width: 20px; /* Fixed width for icons */
+            text-align: center;
+        }
         .submenu {
             display: none; /* Initially hide submenu */
-            padding-left: 15px; /* Indent submenus */
-            margin-top: 5px; /* Space above submenus */
-            background-color: ; /* Match sidebar background */
+            padding-left: 0px; /* Indent submenus */
+            margin-top: 10px; /* Space above submenus */
+            background-color: rgba(0, 0, 0, 0.1) ;
+            list-style: none;
+            border-radius: 5px;
+            overflow: hidden; /* Match sidebar background */
         }
         .submenu li {
-            margin: 5px 0; /* Space between submenu items */
+            margin: 0; /* Space between submenu items */
         }
-        .content {
-            margin-left: 270px; /* Account for sidebar width */
-            padding: 20px;
+        .submenu li a {
+            padding: 10px 20px;
+            display: block;
+            color: #ddd;
+            text-decoration: none;
+            transition: background-color 0.3s, color 0.3s;
+            border-radius: 0;
+        }
+
+        .submenu li a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #d4e157;
+        }
+        /*.content {
+            margin-left: 270px; /* Account for sidebar width 
+           // padding: 20px;
             flex-grow: 1;
-            transition: margin-left 0.3s ease;
+            transition: margin-left 0.3s ease; 
+        } */
+        .content.shifted {
+            margin-left: 0;
         }
-        .icon-only span {
-            display: inline; /* Show text */
-        }
-        .sidebar.hidden .icon-only span {
-            display: none; /* Hide text when sidebar is collapsed */
-        }
+        
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                margin-left: -280px;
             }
             .sidebar.hidden {
                 transform: translateX(0);
+                margin-left: 0;
             }
             .content {
                 margin-left: 0;
@@ -93,16 +126,27 @@
             .sidebar ul li span {
                 display: none; /* Hide text on small screens */
             }
+            .hamburger-button {
+                left: 10px;
+                top: 10px;
+            }
         }
         /* Hamburger button styling */
         .hamburger-button {
             position: fixed;
-            left: 5px;
+            left: 20px;
             top: 20px;
-            z-index: 1000;
+            z-index: 101;
             color: black;
-            font-size: 30px;
+            font-size: 2em;
             cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0%;
+            transition: color 0.3s;
+        }
+        .hamburger-button:hover {
+            color:rgb(8, 5, 11);
         }
     </style>
     <script>
@@ -142,7 +186,7 @@
 <body>
     <i class="fa-solid fa-bars hamburger-button" onclick="toggleSidebar()"></i>
     <div class="sidebar">
-    <h2><img src="images/Qoricha logo.png" alt="Company Logo" style="max-width: 100%; height: auto;"></h2>
+        <h2>Agent Panel</h2>
         <ul>
             <li class="icon-only">
                 <a href="agent_dashboard.php">
@@ -194,7 +238,7 @@
                 </ul>
             </li>
             <li class="icon-only">
-                <a href="view_bank.php">
+                <a href="view_banks.php">
                     <i class="fa-solid fa-building"></i>
                     <span>View Bank Account List</span>
                 </a>

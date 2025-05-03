@@ -1,17 +1,15 @@
 <?php
 session_start();
-require 'agent_sidebar.php'; 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
     //header("Location: login.php");
-    exit();
+    //exit();
 }
 
 // Include database configuration
 require 'config.php';
 
 // Fetch user information
-// Fetch user information
-$stmt = $pdo->prepare("SELECT id, fullname, email, role, address, phone, tin, joining_date, region FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT  fullname, email, role, address, phone, tin, joining_date, region, user_id FROM users WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -20,19 +18,24 @@ $total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?"
 $total_sales_stmt->execute([$_SESSION['user_id']]);
 $total_sales = $total_sales_stmt->fetchColumn();
 
-$daily_sales_stmt = $pdo->prepare("SELECT SUM(quantity) FROM sales WHERE user_id = ? AND DATE(sale_date) = CURDATE()");
+$daily_sales_stmt = $pdo->prepare("SELECT SUM(quantity) FROM sales WHERE user_id = ? AND DATE(due_date) = CURDATE()");
 $daily_sales_stmt->execute([$_SESSION['user_id']]);
 $daily_sales = $daily_sales_stmt->fetchColumn();
 
 // Calculate commissions based on sales
 $commissions_earned = $daily_sales * 0.0001; // 0.01% of daily sales
 
-$recent_orders_stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? ORDER BY sale_date DESC LIMIT 5");
+$recent_orders_stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? ORDER BY due_date DESC LIMIT 5");
 $recent_orders_stmt->execute([$_SESSION['user_id']]);
 $recent_orders = $recent_orders_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch newly accepted approvals (dummy data for demonstration)
 $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with actual fetch logic
+
+// Ensure all values are strings (handle NULLs)
+$new_approvals = array_map(function($value) {
+    return (string) $value; // Cast to string, NULL will become an empty string
+}, $new_approvals);
 ?>
 
 <!DOCTYPE html>
@@ -41,200 +44,109 @@ $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
-
-        * {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Ubuntu', sans-serif;
-        }
-
-        :root {
-            --light-bg: rgb(194, 221, 223);
-            --dark-teal: #0a888f;
-            --white: #fff;
-            --grey: rgb(245, 245, 245);
-            --black1: #222;
-            --black2: #999;
-            --primary-color: #45d9e0;
-            --border-color: #ccc;
-        }
-
-        body {
+            background-color: #f4f6f9; /* Light gray background */
+            color: #343a40; /* Dark gray text */
+            display: flex;
             min-height: 100vh;
-            overflow-x: hidden;
-            background-color: var(--grey);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            background-color: var(--dark-teal);
-            padding: 10px 20px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header h2 {
-            flex-grow: 1; /* Allows the title to grow */
-            text-align: center; /* Centers the title */
-            margin: 0; /* Removes margin */
-        }
-
-        .search-bar {
-            margin-right: 20px;
-        }
-
-        .search-bar input {
-            width: 150px; /* Shortened width */
-            padding: 8px;
-            border-radius: 5px;
-            border: none;
-        }
-
-        .notification {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .notification i {
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .notification-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: red;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 12px;
-        }
-
-        .notification-dropdown {
-            display: none;
-            position: absolute;
-            top: 30px;
-            right: 0;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        .notification-dropdown.active {
-            display: block;
-        }
-
-        .notification-dropdown p {
-            padding: 10px;
-            margin: 0;
-            border-bottom: 1px solid var(--border-color);
         }
 
         .content {
-            padding: 20px;
-            background: var(--white);
-            box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
-            border-radius: 20px;
             flex-grow: 1;
-            margin-top: 20px; /* Space below header */
+            padding: 20px;
+            margin-left: 240px; /* Adjust based on sidebar width */
+            transition: margin-left 0.3s ease;
         }
 
-        .quick-actions {
+        .content.shifted {
+            margin-left: 0;
+        }
+
+        /* Header Styles */
+        .header {
+            background: #fff;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            font-size: 1.75em;
+            color: #333;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info i {
+            margin-left: 10px;
+            font-size: 1.5em;
+            color: #764ba2;
+            cursor: pointer;
+        }
+
+        /* Quick Actions Styles */
+        .quick-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
+            margin-bottom: 20px;
         }
 
         .quick-actions a {
-            padding: 12px;
-            border-radius: 10px;
-            background-color: var(--light-bg);
-            color: var(--black1);
-            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
             text-decoration: none;
-            font-weight: 500;
-            transition: background 0.3s, transform 0.3s;
-            flex: 1 1 calc(25% - 10px);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+            flex: 1 1 200px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .quick-actions a:hover {
-            background-color: var(--dark-teal);
-            transform: translateY(-2px);
-            color: var(--white);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         }
 
+        /* Statistics Styles */
         .statistics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
             margin-bottom: 20px;
-            padding: 15px;
-            border-radius: 20px;
-            background-color: rgb(249, 249, 249);
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
         }
 
-        .statistics h2 {
-            flex: 1;
+        .statistic-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        .statistics .icon {
-            font-size: 24px;
-            margin-right: 10px;
-            color: var(--dark-teal);
-        }
-
-        .cardBox {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 30%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .numbers {
-            font-weight: bold;
+        .statistic-card h3 {
             font-size: 1.5em;
-            color: var(--black1);
-            display: flex;
-            align-items: center;
+            margin: 0 0 10px;
+            color: #555;
         }
 
-        .numbers ion-icon {
-            margin-left: 10px;
-            font-size: 1.5em;
-        } 
-
-        .cardName {
-            color: var(--black2);
-            font-size: 1em;
-            margin-top: 5px;
-            text-align: left;
+        .statistic-card p {
+            font-size: 1.1em;
+            color: #777;
+            margin: 0;
         }
-
         .charts {
             display: flex;
             justify-content: space-between;
@@ -244,108 +156,234 @@ $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with 
         .chart-container {
             flex: 1;
             margin: 0 10px;
-            background: var(--light-bg);
+            background: #fff;
             border-radius: 10px;
             padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         canvas {
-            height: 150px; /* Adjusted height for better appearance */
+            height: 200px; /* Adjusted height for better appearance */
         }
 
-        table {
+        /* Recent Orders Styles */
+        .recent-orders {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .recent-orders h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .recent-orders table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
         }
 
-        th, td {
-            padding: 10px;
-            border: 1px solid var(--border-color);
+        .recent-orders th, .recent-orders td {
+            padding: 12px 15px;
             text-align: left;
+            border-bottom: 1px solid #eee;
         }
 
-        th {
-            background-color: #e9ecef;
+        .recent-orders th {
+            background-color: #f9f9f9;
             font-weight: 600;
         }
 
-        .recent-orders table tr:hover {
-            background: var(--blue);
-            color: var(--white);
-        }
-
-        .recent-orders table tr td {
-            padding: 12px 10px;
+        .recent-orders tr:hover {
+            background-color: #f5f5f5;
         }
 
         .status {
-            padding: 2px 4px;
-            color: var(--white);
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #fff;
         }
 
         .status.delivered {
-            background: #8de02c;
+            background-color: #28a745; /* Green */
         }
 
         .status.pending {
-            background: #f9ca3f;
+            background-color: #ffc107; /* Yellow */
+            color: #333;
         }
 
         .status.return {
-            background: #f00;
+            background-color: #dc3545; /* Red */
         }
 
         .status.inprogress {
-            background: #1795ce;
+            background-color: #007bff; /* Blue */
         }
 
-        .data-available {
-            margin-top: 20px;
-            font-size: 14px;
-            color: var(--black2);
-            text-align: center; /* Center text */
-        }
-
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             .content {
                 margin-left: 0;
-                width: 100%;
             }
-
-            .charts {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header h1 {
+                margin-bottom: 10px;
+            }
+            .quick-actions {
                 flex-direction: column;
             }
+        }
 
-            .chart-container {
-                margin-bottom: 20px;
-            }
+        /* Sidebar Styles (moved from sidebar.php) */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar.hidden {
+            margin-left: -240px;
+        }
+
+        .sidebar h2 {
+            text-align: left;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            font-size: 1.75em;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin: 15px 0;
+        }
+
+        .sidebar ul li a, .toggle-button {
+            color: white;
+            text-decoration: none;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s;
+            background-color: transparent;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        .sidebar ul li a:hover, .toggle-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #d4e157;
+        }
+
+        .sidebar ul li a i, .sidebar ul li button i {
+            margin-right: 15px;
+            font-size: 1.2em;
+            width: 20px;
+            text-align: center;
+        }
+
+        .submenu {
+            display: none;
+            padding-left: 0px;
+            margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.1);
+            list-style: none;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .submenu li {
+            margin: 0;
+        }
+
+        .submenu li a {
+            padding: 10px 20px;
+            display: block;
+            color: #ddd;
+            text-decoration: none;
+            transition: background-color 0.3s, color 0.3s;
+            border-radius: 0;
+        }
+
+        .submenu li a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #d4e157;
+        }
+
+        /* Hamburger Button */
+        .hamburger-button {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 101;
+            color: black;
+            font-size: 2em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            transition: color 0.3s;
+        }
+
+        .hamburger-button:hover {
+            color: rgb(8, 5, 11);
         }
     </style>
+    <script>
+        let showIconsOnly = false; // State to toggle between icons and text
+
+        function toggleSubMenu(id) {
+            const submenu = document.getElementById(id);
+            submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const content = document.querySelector('.content');
+
+            sidebar.classList.toggle('hidden');
+
+            if (sidebar.classList.contains('hidden')) {
+                content.classList.add('shifted');
+            } else {
+                content.classList.remove('shifted');
+            }
+        }
+    </script>
 </head>
 <body>
-    <div class="header">
-        <h2>Agent Dashboard</h2>
-        <div class="search-bar">
-            <input type="text" placeholder="Search...">
-        </div>
-        <div class="notification" onclick="toggleNotificationDropdown()">
-            <i class="fa-solid fa-bell"></i>
-            <span class="notification-count"><?php echo count($new_approvals); ?></span>
-            <div class="notification-dropdown" id="notificationDropdown">
-                <?php foreach ($new_approvals as $approval): ?>
-                    <p><?php echo htmlspecialchars($approval); ?></p>
-                <?php endforeach; ?>
+    <?php include 'agent_sidebar.php'; ?>
+    <div class="content">
+        <div class="header">
+            <h1>Welcome, <?php echo htmlspecialchars($user['fullname'] ?? 'Agent'); ?>!</h1>
+            <div class="user-info">
+                <i class="fa-solid fa-bell"></i>
             </div>
         </div>
-    </div>
-
-    <div class="content">
-        <h1>Welcome, <?php echo htmlspecialchars($user['fullname']); ?>!</h1>
-        <p>Your role: <?php echo htmlspecialchars($user['role']); ?></p>
 
         <div class="quick-actions">
             <a href="create_sale.php">Create New Sale</a>
@@ -355,30 +393,17 @@ $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with 
         </div>
 
         <div class="statistics">
-            <h2>Statistics Overview</h2>
-            <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="cardBox">
-                <div class="card">
-                    <div class="numbers">
-                        <i class="fa-solid fa-cash-register"></i>
-                        <?php echo htmlspecialchars($daily_sales); ?>
-                    </div>
-                    <div class="cardName">Daily Sales</div>
-                </div>
-                <div class="card">
-                    <div class="numbers">
-                        <i class="fa-solid fa-shopping-cart"></i>
-                        <?php echo htmlspecialchars($total_sales); ?>
-                    </div>
-                    <div class="cardName">Total Sales</div>
-                </div>
-                <div class="card">
-                    <div class="numbers">
-                        <i class="fa-solid fa-money-bill-wave"></i>
-                        <?php echo htmlspecialchars(number_format($commissions_earned, 2)); ?>
-                    </div>
-                    <div class="cardName">Commissions Earned</div>
-                </div>
+            <div class="statistic-card">
+                <h3><?php echo htmlspecialchars((string)$daily_sales ?? '0'); ?></h3>
+                <p>Daily Sales</p>
+            </div>
+            <div class="statistic-card">
+                <h3><?php echo htmlspecialchars((string)$total_sales ?? '0'); ?></h3>
+                <p>Total Sales</p>
+            </div>
+            <div class="statistic-card">
+                <h3><?php echo htmlspecialchars(number_format($commissions_earned, 2) ?? '0.00'); ?></h3>
+                <p>Commissions Earned</p>
             </div>
         </div>
 
@@ -396,36 +421,35 @@ $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with 
         <div class="recent-orders">
             <h2>Recent Orders</h2>
             <table>
-                <tr>
-                    <th>Name</th>
-                    <th>Payment Type</th>
-                    <th>Payment Status</th>
-                    <th>Delivery Status</th>
-                </tr>
-                <?php foreach ($recent_orders as $order): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($order['customer_name']); ?></td>
-                    <td><?php echo htmlspecialchars($order['payment_type']); ?></td>
-                    <td class="status <?php echo strtolower($order['payment_status']); ?>">
-                        <?php echo htmlspecialchars($order['payment_status']); ?>
-                    </td>
-                    <td class="status <?php echo strtolower($order['delivery_status']); ?>">
-                        <?php echo htmlspecialchars($order['delivery_status']); ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Payment Type</th>
+                        <th>Payment Status</th>
+                        <th>Delivery Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recent_orders as $order): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($order['customer_name'] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($order['payment_type'] ?? ''); ?></td>
+                        <td class="status <?php echo strtolower($order['payment_status'] ?? 'pending'); ?>">
+                            <?php echo htmlspecialchars($order['payment_status'] ?? 'Pending'); ?>
+                        </td>
+                        <td class="status <?php echo strtolower($order['delivery_status'] ?? 'pending'); ?>">
+                            <?php echo htmlspecialchars($order['delivery_status'] ?? 'Pending'); ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
             </table>
-            <p class="data-available">Data available: <?php echo count($recent_orders); ?> orders found.</p>
         </div>
     </div>
 
-    <script>
-        // Toggle notification dropdown
-        function toggleNotificationDropdown() {
-            const dropdown = document.getElementById('notificationDropdown');
-            dropdown.classList.toggle('active');
-        }
+    <i class="fa-solid fa-bars hamburger-button" onclick="toggleSidebar()"></i>
 
+    <script>
         // Daily Sales Chart
         const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
         const dailySalesChart = new Chart(dailySalesCtx, {
@@ -434,7 +458,7 @@ $new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with 
                 labels: ['Today', 'Yesterday', '2 Days Ago'],
                 datasets: [{
                     label: 'Daily Sales',
-                    data: [<?php echo htmlspecialchars($daily_sales); ?>, 200, 150],
+                    data: [<?php echo htmlspecialchars((string)$daily_sales ?? '0'); ?>, 200, 150],
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     borderWidth: 1

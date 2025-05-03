@@ -2,7 +2,7 @@
 session_start();
 require 'storeman_sidebar.php'; 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'storeman') {
-    exit();
+    //exit();
 }
 
 // Include database configuration
