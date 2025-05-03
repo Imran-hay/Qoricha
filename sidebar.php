@@ -405,6 +405,13 @@
                     <span class="text">Register User</span>
                 </a>
             </li>
+
+            <li class="icon-only logout">
+                <a href="logout.php">
+                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                    <span class="text">Logout</span>
+                </a>
+            </li>
         </ul>
     </div>
     

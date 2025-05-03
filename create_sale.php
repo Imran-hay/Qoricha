@@ -247,9 +247,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div id="bank_statement_container">
                 <label for="transaction_number">Transaction Number:</label>
-                <input type="text" id="transaction_number" name="transaction_number">
+                <input type="text" required id="transaction_number" name="transaction_number">
                 <label for="bank_statement">Upload Bank Statement Slip:</label>
-                <input type="file" id="bank_statement" name="bank_statement" accept=".pdf,.jpg,.jpeg,.png">
+                <input type="file" required id="bank_statement" name="bank_statement" accept=".pdf,.jpg,.jpeg,.png">
             </div>
             <button type="submit">Submit Sale</button>
             <?php if (isset($show_undo) && $show_undo): ?>
