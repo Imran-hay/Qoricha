@@ -404,27 +404,6 @@ $payment_types = [
             }
         }
     </style>
-    <script>
-        let showIconsOnly = false; // State to toggle between icons and text
-
-        function toggleSubMenu(id) {
-            const submenu = document.getElementById(id);
-            submenu.style.display = submenu.style.display === "block" ? "none" : "block";
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const content = document.querySelector('.content');
-
-            sidebar.classList.toggle('hidden');
-
-            if (sidebar.classList.contains('hidden')) {
-                content.classList.add('shifted');
-            } else {
-                content.classList.remove('shifted');
-            }
-        }
-    </script>
 </head>
 <body>
     <div class="main-content">

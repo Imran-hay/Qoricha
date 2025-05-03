@@ -414,27 +414,6 @@ $dashboard_data = [
                     <i class="fas fa-arrow-up"></i> 8% from last week
                 </div>
             </div>
-            <div class="statistic-card">
-                <h3><?php
-                    // Number of Orders for the current month
-                    $sqlTotalOrders = "SELECT COUNT(*) AS totalOrders FROM sales WHERE YEAR(created_at) = $currentYear AND MONTH(created_at) = $currentMonth AND status = 'approved'";
-                    $resultTotalOrders = $pdo->query($sqlTotalOrders);
-                    $totalOrders = $resultTotalOrders->fetch(PDO::FETCH_ASSOC)['totalOrders'] ?? 0;
-                    echo $totalOrders;
-                    ?></h3>
-                <p>Number of Orders (This Month)</p>
-            </div>
-            <div class="statistic-card">
-                <h3><?php
-                    // New Customers for the current month
-                    $sqlNewCustomers = "SELECT COUNT(*) AS newCustomers FROM customers WHERE YEAR(customer_id) = $currentYear AND MONTH(customer_id) = $currentMonth"; // Assuming customer_id is auto-increment and roughly corresponds to creation date.  This might need adjustment.
-                    $resultNewCustomers = $pdo->query($sqlNewCustomers);
-                    $newCustomers = $resultNewCustomers->fetch(PDO::FETCH_ASSOC)['newCustomers'] ?? 0;
-                    echo $newCustomers;
-                    ?></h3>
-                <p>New Customers (This Month)</p>
-            </div>
-        </div>
 
             <div class="stat-card withdrawals">
                 <div class="card-header">
