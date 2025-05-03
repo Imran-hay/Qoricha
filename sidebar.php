@@ -4,302 +4,466 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
-        /* General Styles */
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+            --accent-color: #a78bfa;
+            --text-color: #f8fafc;
+            --hover-color: #6366f1;
+            --submenu-bg: rgba(79, 70, 229, 0.9);
+            --sidebar-bg: linear-gradient(160deg, #4f46e5 0%, #7c3aed 100%);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 12px;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f6f9; /* Light gray background */
-            color: #343a40; /* Dark gray text */
+            background-color: #f8fafc;
             display: flex;
             min-height: 100vh;
         }
-
-        /* Sidebar Styles */
+        
+        /* Sidebar Styling */
         .sidebar {
-            width: 240px; /* Increased width */
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradient background */
-            color: white;
+            width: 280px;
+            background: var(--sidebar-bg);
+            height: 100vh;
+            padding: 20px 0;
+            box-shadow: var(--shadow);
             position: fixed;
             left: 0;
             top: 0;
-            height: 100vh;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
-            transition: all 0.3s ease;
+            transition: var(--transition);
             overflow-y: auto;
-            padding: 20px;
             z-index: 100;
+            border-top-right-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
         }
-
+        
         .sidebar.hidden {
-            margin-left: -280px;
+            transform: translateX(-100%);
         }
-
-        .sidebar h2 {
-            text-align: left;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Light border */
-            font-weight: 600;
-            font-size: 1.75em;
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            margin-bottom: 10px;
+            text-align: center;
+            position: relative;
         }
-
+        
+        .sidebar-header h2 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin: 0;
+            padding: 15px 0;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .sidebar-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
         .sidebar ul {
             list-style: none;
-            padding: 0;
+            padding: 0 15px;
         }
-
+        
         .sidebar ul li {
-            margin: 15px 0;
+            margin: 8px 0;
+            position: relative;
         }
-        .header{
-            font-size: 1.5em;
-            color: #fff; /* White text for header */
-            margin-top: 30px;
-            text-align: center;
-        }
-
+        
         .sidebar ul li a, .sidebar ul li button {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
-            color: white;
-            text-decoration: none;
-            padding: 12px 15px;
             border-radius: 8px;
-            transition: background-color 0.3s, color 0.3s;
-            border: none;
+            transition: var(--transition);
             background-color: transparent;
+            border: none;
             width: 100%;
-            text-align: left;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
-
+        
         .sidebar ul li a:hover, .sidebar ul li button:hover {
-            background-color: rgba(255, 255, 255, 0.1); /* Lighter background on hover */
-            color: #d4e157; /* Accent color on hover */
+            background-color: var(--hover-color);
+            transform: translateX(5px);
         }
-
-        .sidebar ul li a i, .sidebar ul li button i {
-            margin-right: 15px;
-            font-size: 1.2em;
-            width: 20px; /* Fixed width for icons */
+        
+        .sidebar ul li.active a {
+            background-color: var(--accent-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        
+        .icon {
+            margin-right: 12px;
+            font-size: 1.1rem;
+            min-width: 24px;
             text-align: center;
         }
-
+        
         .submenu {
-            list-style: none;
-            padding-left: 0;
-            margin-top: 10px;
             display: none;
-            background-color: rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
+            padding-left: 10px;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease-out;
+            background-color: var(--submenu-bg);
+            border-radius: 8px;
             overflow: hidden;
         }
-
-        .submenu li {
-            margin: 0;
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
+        
         .submenu li a {
-            padding: 10px 20px;
-            display: block;
-            color: #ddd;
-            text-decoration: none;
-            transition: background-color 0.3s, color 0.3s;
+            padding: 10px 15px 10px 45px;
+            font-size: 0.9rem;
+            background-color: transparent;
             border-radius: 0;
+            margin: 0;
+            position: relative;
         }
-
+        
         .submenu li a:hover {
             background-color: rgba(255, 255, 255, 0.1);
-            color: #d4e157;
         }
-
-        /* Content Styles */
+        
+        .submenu li a::before {
+            content: '';
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        
+        .submenu li a:hover::before {
+            opacity: 1;
+            left: 30px;
+        }
+        
+        .arrow {
+            margin-left: auto;
+            transition: var(--transition);
+            font-size: 0.8rem;
+        }
+        
+        .sidebar ul li button.active .arrow {
+            transform: rotate(180deg);
+        }
+        
         .content {
-           
-            padding: 30px;
-            flex-grow: 1;
-            transition: margin-left 0.3s ease;
+      
         }
-
-        .content.shifted {
+        
+        .content.expanded {
             margin-left: 0;
         }
-
-        /* Hamburger Button Styles */
+        
+        /* Hamburger button styling */
         .hamburger-button {
             position: fixed;
-            top: 20px;
             left: 20px;
-            z-index: 101;
-            color:rgb(8, 9, 17);
-            font-size: 2em;
+            top: 20px;
+            z-index: 1000;
+            color: var(--primary-color);
+            font-size: 1.5rem;
             cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            transition: color 0.3s;
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
-
+        
         .hamburger-button:hover {
-            color: #764ba2;
+            transform: scale(1.1);
+            color: var(--secondary-color);
         }
-
-        /* Media Queries */
+        
+        /* Notification badge */
+        .badge {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #ef4444;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        /* Highlight for important menu items */
+        .highlight {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent-color);
+            border-radius: 4px 0 0 4px;
+            transition: var(--transition);
+            opacity: 0;
+        }
+        
+        .sidebar ul li a:hover .highlight, 
+        .sidebar ul li button:hover .highlight {
+            opacity: 1;
+        }
+        
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             .sidebar {
-                margin-left: -280px;
+                transform: translateX(-100%);
+                width: 260px;
             }
-
+            
             .sidebar.hidden {
-                margin-left: 0;
+                transform: translateX(0);
             }
-
+            
             .content {
                 margin-left: 0;
             }
-
-            .hamburger-button {
-                left: 10px;
-                top: 10px;
-            }
+        }
+        
+        /* Glow effect for active items */
+        .sidebar ul li.active a {
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+        }
+        
+        /* Pulse animation for notifications */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .badge.pulse {
+            animation: pulse 1.5s infinite;
         }
     </style>
-    <script>
-        function toggleSubMenu(id) {
-            const submenu = document.getElementById(id);
-            submenu.style.display = submenu.style.display === "block" ? "none" : "block";
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const content = document.querySelector('.content');
-            sidebar.classList.toggle('hidden');
-            content.classList.toggle('shifted');
-        }
-    </script>
 </head>
 <body>
-    <button class="hamburger-button" onclick="toggleSidebar()">
+    <div class="hamburger-button" onclick="toggleSidebar()">
         <i class="fa-solid fa-bars"></i>
-    </button>
-
+    </div>
+    
     <div class="sidebar">
-        <h2 class="header">Admin Panel</h2>
+        <div class="sidebar-header">
+            <h2>Admin Panel</h2>
+        </div>
+        
         <ul>
-            <li>
+            <li class="active">
                 <a href="admin_dashboard.php">
-                    <i class="fa-solid fa-tachometer-alt"></i>
-                    Dashboard
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="text">Dashboard</span>
                 </a>
             </li>
+            
             <li>
                 <a href="approvals.php">
-                    <i class="fa-solid fa-check-circle"></i>
-                    Approvals
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-clipboard-check"></i></span>
+                    <span class="text">Approvals</span>
+                  
                 </a>
             </li>
+            
             <li>
-                <button onclick="toggleSubMenu('manageBankSubMenu')">
-                    <i class="fa-solid fa-university"></i>
-                    Manage Bank <i class="fa-solid fa-caret-down" style="margin-left: auto;"></i>
+                <button onclick="toggleSubMenu(this, 'manageBankSubMenu')">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-landmark"></i></span>
+                    <span class="text">Manage Bank</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
                 <ul id="manageBankSubMenu" class="submenu">
                     <li><a href="add_bank.php">Add Bank</a></li>
                     <li><a href="view_banks.php">View Banks</a></li>
                 </ul>
             </li>
-             <li>
-                <button onclick="toggleSubMenu('manageItemsSubMenu')">
-                    <i class="fa-solid fa-box"></i>
-                    Manage Items <i class="fa-solid fa-caret-down" style="margin-left: auto;"></i>
+            
+            <li>
+                <button onclick="toggleSubMenu(this, 'manageItemsSubMenu')">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-boxes-stacked"></i></span>
+                    <span class="text">Manage Items</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
                 <ul id="manageItemsSubMenu" class="submenu">
                     <li><a href="create_item.php">Add Item</a></li>
                     <li><a href="view_items.php">View Items</a></li>
-                    <li><a href="add_stock.php">Add Items To Stock</a></li>
-                    <li><a href="view_stock.php">View Stock List</a></li>
                 </ul>
             </li>
+            
             <li>
-                <button onclick="toggleSubMenu('expensesSubMenu')">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    Manage Expenses <i class="fa-solid fa-caret-down" style="margin-left: auto;"></i>
+                <button onclick="toggleSubMenu(this, 'expensesSubMenu')">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-receipt"></i></span>
+                    <span class="text">Manage Expenses</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
+                 
                 </button>
                 <ul id="expensesSubMenu" class="submenu">
-                    <li><a href="add_expense.php">Add Expenses</a></li>
                     <li><a href="view_expenses.php">View Expenses</a></li>
-                    <li><a href="add_category.php">Add Expenses Categories</a></li>
-                    <li><a href="view_categories.php">View Category List</a></li>
+                    <li><a href="view_categories.php">View Categories</a></li>
                 </ul>
             </li>
+            
             <li>
                 <a href="manage_customers.php">
-                    <i class="fa-solid fa-users"></i>
-                    Manage Customer
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-users-between-lines"></i></span>
+                    <span class="text">Manage Customers</span>
                 </a>
             </li>
+            
             <li>
                 <a href="manage_suppliers.php">
-                    <i class="fa-solid fa-user-friends"></i>
-                    Manage Supplier
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-truck-field"></i></span>
+                    <span class="text">Manage Suppliers</span>
                 </a>
             </li>
-            <li>
+            
+         <!--    <li>
                 <a href="hosted_customers.php">
-                    <i class="fa-solid fa-user-tag"></i>
-                    Hosted Customer
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-house-user"></i></span>
+                    <span class="text">Hosted Customers</span>
                 </a>
-            </li>
+            </li> -->
+            
             <li>
-                <a href="manage_bincard.php">
-                    <i class="fa-solid fa-book"></i>
-                    Manage Bincard
-                </a>
-            </li>
-            <li>
-                <button onclick="toggleSubMenu('reportsSubMenu')">
-                    <i class="fa-solid fa-chart-line"></i>
-                    Reports <i class="fa-solid fa-caret-down" style="margin-left: auto;"></i>
+                <button onclick="toggleSubMenu(this, 'reportsSubMenu')">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-chart-pie"></i></span>
+                    <span class="text">Reports</span>
+                    <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
                 <ul id="reportsSubMenu" class="submenu">
-                    <li><a href="stock_list.php">Stock List</a></li>
+                 <!--    <li><a href="stock_list.php">Stock List</a></li>
                     <li><a href="cash_sales.php">Cash Sales</a></li>
                     <li><a href="credit_sales.php">Credit Sales</a></li>
                     <li><a href="agent_cash_sales.php">Agent Cash Sales</a></li>
                     <li><a href="commission_calculator.php">Commission Calculator</a></li>
-                    <li><a href="agent_credit_sales.php">Agent Credit Sales</a></li>
+                    <li><a href="agent_credit_sales.php">Agent Credit Sales</a></li> -->
                     <li><a href="financial_reports.php">Financial Reports</a></li>
-                    <li><a href="outdated_items.php">Outdated Items</a></li>
-                    <li><a href="credit_customer_report.php">Credit Customer Report</a></li>
+                    <li><a href="expired_items.php">Outdated Items</a></li>
+               <!--      <li><a href="credit_customer_report.php">Credit Customer Report</a></li> -->
                 </ul>
             </li>
-            <li>
-                <a href="availability_system.php">
-                    <i class="fa-solid fa-check-circle"></i>
-                    Check Availability System
-                </a>
-            </li>
-            <li>
+            
+         <!--    <li>
                 <a href="account_settings.php">
-                    <i class="fa-solid fa-cog"></i>
-                    Account Setting
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-user-gear"></i></span>
+                    <span class="text">Account Settings</span>
                 </a>
-            </li>
+            </li> -->
+
             <li>
-                <a href="support_system.php">
-                    <i class="fa-solid fa-headset"></i>
-                    Support System
+                <a href="register.php">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-user-gear"></i></span>
+                    <span class="text">Register User</span>
                 </a>
             </li>
         </ul>
     </div>
-
+    
     <div class="content">
-      
+        <!-- Your main content goes here -->
     </div>
+
+    <script>
+        function toggleSubMenu(button, id) {
+            const submenu = document.getElementById(id);
+            const isActive = button.classList.contains('active');
+            
+            // Close all other submenus first
+            document.querySelectorAll('.submenu').forEach(menu => {
+                if (menu.id !== id) {
+                    menu.style.display = 'none';
+                    menu.previousElementSibling.classList.remove('active');
+                }
+            });
+            
+            // Toggle current submenu
+            submenu.style.display = isActive ? 'none' : 'block';
+            button.classList.toggle('active');
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const content = document.querySelector('.content');
+            
+            sidebar.classList.toggle('hidden');
+            content.classList.toggle('expanded');
+            
+            // Store state in localStorage
+            const isHidden = sidebar.classList.contains('hidden');
+            localStorage.setItem('sidebarHidden', isHidden);
+        }
+        
+        // Check localStorage on load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('sidebarHidden') === 'true') {
+                toggleSidebar();
+            }
+            
+            // Set active menu item based on current page
+            const currentPage = window.location.pathname.split('/').pop();
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.parentElement.classList.add('active');
+                    
+                    // Open parent submenu if this is a submenu item
+                    const submenuItem = link.closest('.submenu');
+                    if (submenuItem) {
+                        submenuItem.style.display = 'block';
+                        const toggleButton = submenuItem.previousElementSibling;
+                        toggleButton.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

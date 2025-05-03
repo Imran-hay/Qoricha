@@ -1,41 +1,99 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
-    //header("Location: login.php");
-    //exit();
+require 'agent_sidebar.php'; 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
 }
 
-// Include database configuration
 require 'config.php';
 
-// Fetch user information
-$stmt = $pdo->prepare("SELECT  fullname, email, role, address, phone, tin, joining_date, region, user_id FROM users WHERE user_id = ?");
+// Fetch user information (assuming users table exists with these fields)
+$stmt = $pdo->prepare("SELECT user_id, fullname, email, role FROM users WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch statistics using agent_id
-$total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?");
-$total_sales_stmt->execute([$_SESSION['user_id']]);
-$total_sales = $total_sales_stmt->fetchColumn();
+// Initialize variables to prevent undefined errors
+$total_sales = 0;
+$daily_sales_amount = 0;
+$daily_quantity = 0;
+$commissions_earned = 0;
+$recent_orders = [];
+$pending_approvals = [];
 
-$daily_sales_stmt = $pdo->prepare("SELECT SUM(quantity) FROM sales WHERE user_id = ? AND DATE(due_date) = CURDATE()");
-$daily_sales_stmt->execute([$_SESSION['user_id']]);
-$daily_sales = $daily_sales_stmt->fetchColumn();
+// Check if sales table exists and fetch statistics
+$sales_table_exists = $pdo->query("SHOW TABLES LIKE 'sales'")->rowCount() > 0;
 
-// Calculate commissions based on sales
-$commissions_earned = $daily_sales * 0.0001; // 0.01% of daily sales
+if ($sales_table_exists) {
+    // Total sales count
+    $total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?");
+    $total_sales_stmt->execute([$_SESSION['user_id']]);
+    $total_sales = $total_sales_stmt->fetchColumn();
 
-$recent_orders_stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? ORDER BY due_date DESC LIMIT 5");
-$recent_orders_stmt->execute([$_SESSION['user_id']]);
-$recent_orders = $recent_orders_stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Daily sales amount (using total_amount field)
+    $daily_sales_stmt = $pdo->prepare("
+        SELECT IFNULL(SUM(total_amount), 0) 
+        FROM sales 
+        WHERE user_id = ? AND DATE(created_at) = CURDATE()
+    ");
+    $daily_sales_stmt->execute([$_SESSION['user_id']]);
+    $daily_sales_amount = $daily_sales_stmt->fetchColumn();
 
-// Fetch newly accepted approvals (dummy data for demonstration)
-$new_approvals = ["Approval #1", "Approval #2", "Approval #3"]; // Replace with actual fetch logic
+    // Daily quantity sold
+    $daily_quantity_stmt = $pdo->prepare("
+        SELECT IFNULL(SUM(quantity), 0) 
+        FROM sales 
+        WHERE user_id = ? AND DATE(created_at) = CURDATE()
+    ");
+    $daily_quantity_stmt->execute([$_SESSION['user_id']]);
+    $daily_quantity = $daily_quantity_stmt->fetchColumn();
 
-// Ensure all values are strings (handle NULLs)
-$new_approvals = array_map(function($value) {
-    return (string) $value; // Cast to string, NULL will become an empty string
-}, $new_approvals);
+    // Simple commission calculation (1% of total sales)
+    $commissions_earned = $daily_sales_amount * 0.01;
+
+    // Recent orders (simplified query based on existing fields)
+    $recent_orders_stmt = $pdo->prepare("
+        SELECT 
+            sale_id, 
+            customer_name, 
+            quantity, 
+            total_amount, 
+            payment_type,
+            created_at
+        FROM sales 
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 5
+    ");
+    $recent_orders_stmt->execute([$_SESSION['user_id']]);
+    $recent_orders = $recent_orders_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Check if approvals table exists (though your SQL file shows it doesn't)
+$approvals_table_exists = $pdo->query("SHOW TABLES LIKE 'approvals'")->rowCount() > 0;
+
+// Dummy approvals data since table doesn't exist
+$pending_approvals = [
+    ['id' => 1, 'sale_id' => 1001, 'customer_name' => 'Sample Customer', 'total_amount' => 1500],
+    ['id' => 2, 'sale_id' => 1002, 'customer_name' => 'Another Customer', 'total_amount' => 2500]
+];
+
+// Weekly sales data for chart (simulated since we don't have historical data)
+$weekly_sales = [
+    ['day' => 'Monday', 'amount' => 1500, 'quantity' => 5],
+    ['day' => 'Tuesday', 'amount' => 2300, 'quantity' => 8],
+    ['day' => 'Wednesday', 'amount' => 1800, 'quantity' => 6],
+    ['day' => 'Thursday', 'amount' => 2100, 'quantity' => 7],
+    ['day' => 'Friday', 'amount' => 3200, 'quantity' => 10],
+    ['day' => 'Saturday', 'amount' => 2800, 'quantity' => 9],
+    ['day' => 'Sunday', 'amount' => 1200, 'quantity' => 4]
+];
+
+// Payment type distribution (simulated if no data exists)
+$payment_types = [
+    ['payment_type' => 'cash', 'amount' => 7500, 'count' => 15],
+    ['payment_type' => 'credit', 'amount' => 4500, 'count' => 9]
+];
 ?>
 
 <!DOCTYPE html>
@@ -44,313 +102,306 @@ $new_approvals = array_map(function($value) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --primary: #0a888f;
+            --primary-light: #e6f0ff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #fd7e0b;
+            --info: #17a2b8;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --transition: all 0.2s ease;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: #4a5568;
             margin: 0;
             padding: 0;
-            background-color: #f4f6f9; /* Light gray background */
-            color: #343a40; /* Dark gray text */
-            display: flex;
-            min-height: 100vh;
         }
 
-        .content {
-            flex-grow: 1;
+        .main-content {
+            margin-left: 280px;
             padding: 20px;
-            margin-left: 240px; /* Adjust based on sidebar width */
-            transition: margin-left 0.3s ease;
+            transition: var(--transition);
         }
 
-        .content.shifted {
-            margin-left: 0;
-        }
-
-        /* Header Styles */
-        .header {
-            background: #fff;
-            padding: 15px 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            border-radius: 8px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        .header h1 {
-            font-size: 1.75em;
-            color: #333;
+        .dashboard-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark);
             margin: 0;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
+        .dashboard-title p {
+            color: #64748b;
+            margin: 5px 0 0;
+            font-size: 14px;
         }
 
-        .user-info i {
-            margin-left: 10px;
-            font-size: 1.5em;
-            color: #764ba2;
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-bar input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .notification {
+            position: relative;
             cursor: pointer;
         }
 
-        /* Quick Actions Styles */
-        .quick-actions {
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            color: var(--dark);
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .action-icon {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .action-title {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
 
-        .quick-actions a {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background-color 0.3s;
-            flex: 1 1 200px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
         }
 
-        .quick-actions a:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
 
-        /* Statistics Styles */
-        .statistics {
+        .stat-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .card-title {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-card .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(10, 136, 143, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-card .card-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 5px 0;
+        }
+
+        .stat-card .card-change {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Charts Section */
+        .charts-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
-        .statistic-card {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .chart-container {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
         }
 
-        .statistic-card h3 {
-            font-size: 1.5em;
-            margin: 0 0 10px;
-            color: #555;
+        .chart-container .chart-header {
+            margin-bottom: 15px;
         }
 
-        .statistic-card p {
-            font-size: 1.1em;
-            color: #777;
+        .chart-container .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
             margin: 0;
         }
-        .charts {
+
+        /* Data Tables */
+        .data-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+        }
+
+        .data-card .card-header {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .chart-container {
-            flex: 1;
-            margin: 0 10px;
-            background: #fff;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        canvas {
-            height: 200px; /* Adjusted height for better appearance */
-        }
-
-        /* Recent Orders Styles */
-        .recent-orders {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .recent-orders h2 {
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            color: #555;
-        }
-
-        .recent-orders table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .recent-orders th, .recent-orders td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .recent-orders th {
-            background-color: #f9f9f9;
-            font-weight: 600;
-        }
-
-        .recent-orders tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        .status {
-            padding: 5px 8px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            color: #fff;
-        }
-
-        .status.delivered {
-            background-color: #28a745; /* Green */
-        }
-
-        .status.pending {
-            background-color: #ffc107; /* Yellow */
-            color: #333;
-        }
-
-        .status.return {
-            background-color: #dc3545; /* Red */
-        }
-
-        .status.inprogress {
-            background-color: #007bff; /* Blue */
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .content {
-                margin-left: 0;
-            }
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .header h1 {
-                margin-bottom: 10px;
-            }
-            .quick-actions {
-                flex-direction: column;
-            }
-        }
-
-        /* Sidebar Styles (moved from sidebar.php) */
-        .sidebar {
-            width: 240px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            position: fixed;
-            left: 0;
-            top: 0;
-            transition: all 0.3s ease;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .sidebar.hidden {
-            margin-left: -240px;
-        }
-
-        .sidebar h2 {
-            text-align: left;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            font-weight: 600;
-            font-size: 1.75em;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar ul li {
-            margin: 15px 0;
-        }
-
-        .sidebar ul li a, .toggle-button {
-            color: white;
-            text-decoration: none;
-            padding: 12px 15px;
-            display: flex;
             align-items: center;
-            border-radius: 8px;
-            transition: background-color 0.3s, color 0.3s;
-            background-color: transparent;
-            border: none;
-            width: 100%;
-            cursor: pointer;
-            text-align: left;
-            font-size: 1em;
+            margin-bottom: 15px;
         }
 
-        .sidebar ul li a:hover, .toggle-button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #d4e157;
-        }
-
-        .sidebar ul li a i, .sidebar ul li button i {
-            margin-right: 15px;
-            font-size: 1.2em;
-            width: 20px;
-            text-align: center;
-        }
-
-        .submenu {
-            display: none;
-            padding-left: 0px;
-            margin-top: 10px;
-            background-color: rgba(0, 0, 0, 0.1);
-            list-style: none;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .submenu li {
+        .data-card .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
             margin: 0;
         }
 
-        .submenu li a {
-            padding: 10px 20px;
-            display: block;
-            color: #ddd;
-            text-decoration: none;
-            transition: background-color 0.3s, color 0.3s;
-            border-radius: 0;
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
         }
 
-        .submenu li a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #d4e157;
+        .data-table th {
+            text-align: left;
+            padding: 10px;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        /* Hamburger Button */
-        .hamburger-button {
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            z-index: 101;
-            color: black;
-            font-size: 2em;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            transition: color 0.3s;
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .hamburger-button:hover {
-            color: rgb(8, 5, 11);
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge.cash {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.credit {
+            background: rgba(253, 126, 20, 0.1);
+            color: var(--warning);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .header-actions {
+                width: 100%;
+            }
         }
     </style>
     <script>
@@ -376,70 +427,138 @@ $new_approvals = array_map(function($value) {
     </script>
 </head>
 <body>
-    <?php include 'agent_sidebar.php'; ?>
-    <div class="content">
-        <div class="header">
-            <h1>Welcome, <?php echo htmlspecialchars($user['fullname'] ?? 'Agent'); ?>!</h1>
-            <div class="user-info">
-                <i class="fa-solid fa-bell"></i>
+    <div class="main-content">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="dashboard-title">
+                <h1>Welcome, <?= htmlspecialchars($user['fullname']) ?></h1>
+                <p>Agent Dashboard Overview</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <?php if (count($pending_approvals) > 0): ?>
+                        <span class="notification-badge"><?= count($pending_approvals) ?></span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
+        <!-- Quick Actions -->
         <div class="quick-actions">
-            <a href="create_sale.php">Create New Sale</a>
-            <a href="pending_approvals.php">View Pending Approvals</a>
-            <a href="manage_customers.php">Manage Customers</a>
-            <a href="reports.php">View Reports</a>
+            <a href="create_sale.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-cash-register"></i></div>
+                <div class="action-title">New Sale</div>
+            </a>
+            <a href="customers.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-users"></i></div>
+                <div class="action-title">Customers</div>
+            </a>
+            <a href="reports.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="action-title">Reports</div>
+            </a>
+            <a href="profile.php" class="action-card">
+                <div class="action-icon"><i class="fas fa-user"></i></div>
+                <div class="action-title">Profile</div>
+            </a>
         </div>
 
-        <div class="statistics">
-            <div class="statistic-card">
-                <h3><?php echo htmlspecialchars((string)$daily_sales ?? '0'); ?></h3>
-                <p>Daily Sales</p>
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Today's Sales</div>
+                    <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                </div>
+                <div class="card-value">₱<?= number_format($daily_sales_amount, 2) ?></div>
+                <div class="card-change">
+                    <i class="fas fa-box"></i> <?= $daily_quantity ?> items
+                </div>
             </div>
-            <div class="statistic-card">
-                <h3><?php echo htmlspecialchars((string)$total_sales ?? '0'); ?></h3>
-                <p>Total Sales</p>
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Total Sales</div>
+                    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                </div>
+                <div class="card-value"><?= $total_sales ?></div>
+                <div class="card-change">
+                    <i class="fas fa-history"></i> All time
+                </div>
             </div>
-            <div class="statistic-card">
-                <h3><?php echo htmlspecialchars(number_format($commissions_earned, 2) ?? '0.00'); ?></h3>
-                <p>Commissions Earned</p>
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Commissions</div>
+                    <div class="card-icon"><i class="fas fa-money-bill-wave"></i></div>
+                </div>
+                <div class="card-value">₱<?= number_format($commissions_earned, 2) ?></div>
+                <div class="card-change">
+                    <i class="fas fa-percent"></i> 1% of sales
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="card-header">
+                    <div class="card-title">Pending</div>
+                    <div class="card-icon"><i class="fas fa-clock"></i></div>
+                </div>
+                <div class="card-value"><?= count($pending_approvals) ?></div>
+                <div class="card-change <?= count($pending_approvals) > 0 ? 'negative' : 'positive' ?>">
+                    <?php if (count($pending_approvals) > 0): ?>
+                        <i class="fas fa-exclamation-circle"></i> Needs action
+                    <?php else: ?>
+                        <i class="fas fa-check-circle"></i> All clear
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
-        <div class="charts">
+        <!-- Charts Section -->
+        <div class="charts-section">
             <div class="chart-container">
-                <h2>Daily Sales</h2>
-                <canvas id="dailySalesChart"></canvas>
+                <div class="chart-header">
+                    <h3 class="chart-title">Weekly Sales</h3>
+                </div>
+                <canvas id="weeklySalesChart" height="200"></canvas>
             </div>
             <div class="chart-container">
-                <h2>Payment Types</h2>
-                <canvas id="paymentTypeChart"></canvas>
+                <div class="chart-header">
+                    <h3 class="chart-title">Payment Methods</h3>
+                </div>
+                <canvas id="paymentMethodChart" height="200"></canvas>
             </div>
         </div>
 
-        <div class="recent-orders">
-            <h2>Recent Orders</h2>
-            <table>
+        <!-- Recent Orders -->
+        <div class="data-card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Orders</h3>
+                <a href="sales.php" class="view-all">View All</a>
+            </div>
+            <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Payment Type</th>
-                        <th>Payment Status</th>
-                        <th>Delivery Status</th>
+                        <th>Customer</th>
+                        <th>Qty</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($recent_orders as $order): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($order['customer_name'] ?? ''); ?></td>
-                        <td><?php echo htmlspecialchars($order['payment_type'] ?? ''); ?></td>
-                        <td class="status <?php echo strtolower($order['payment_status'] ?? 'pending'); ?>">
-                            <?php echo htmlspecialchars($order['payment_status'] ?? 'Pending'); ?>
+                        <td><?= htmlspecialchars($order['customer_name']) ?></td>
+                        <td><?= $order['quantity'] ?></td>
+                        <td>₱<?= number_format($order['total_amount'], 2) ?></td>
+                        <td>
+                            <span class="status-badge <?= $order['payment_type'] ?>">
+                                <?= ucfirst($order['payment_type']) ?>
+                            </span>
                         </td>
-                        <td class="status <?php echo strtolower($order['delivery_status'] ?? 'pending'); ?>">
-                            <?php echo htmlspecialchars($order['delivery_status'] ?? 'Pending'); ?>
-                        </td>
+                        <td><?= date('M d', strtotime($order['created_at'])) ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -447,62 +566,49 @@ $new_approvals = array_map(function($value) {
         </div>
     </div>
 
-    <i class="fa-solid fa-bars hamburger-button" onclick="toggleSidebar()"></i>
-
     <script>
-        // Daily Sales Chart
-        const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
-        const dailySalesChart = new Chart(dailySalesCtx, {
-            type: 'line',
+        // Weekly Sales Chart
+        const weeklySalesCtx = document.getElementById('weeklySalesChart').getContext('2d');
+        const weeklySalesChart = new Chart(weeklySalesCtx, {
+            type: 'bar',
             data: {
-                labels: ['Today', 'Yesterday', '2 Days Ago'],
+                labels: <?= json_encode(array_column($weekly_sales, 'day')) ?>,
                 datasets: [{
-                    label: 'Daily Sales',
-                    data: [<?php echo htmlspecialchars((string)$daily_sales ?? '0'); ?>, 200, 150],
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    label: 'Sales Amount',
+                    data: <?= json_encode(array_column($weekly_sales, 'amount')) ?>,
+                    backgroundColor: 'rgba(10, 136, 143, 0.7)',
+                    borderColor: 'rgba(10, 136, 143, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Sales Amount'
-                        }
+                        beginAtZero: true
                     }
                 }
             }
         });
 
-        // Payment Type Chart
-        const paymentTypeCtx = document.getElementById('paymentTypeChart').getContext('2d');
-        const paymentTypeChart = new Chart(paymentTypeCtx, {
-            type: 'pie',
+        // Payment Method Chart
+        const paymentMethodCtx = document.getElementById('paymentMethodChart').getContext('2d');
+        const paymentMethodChart = new Chart(paymentMethodCtx, {
+            type: 'doughnut',
             data: {
-                labels: ['Cash', 'Credit'],
+                labels: <?= json_encode(array_column($payment_types, 'payment_type')) ?>,
                 datasets: [{
-                    label: 'Payment Types',
-                    data: [300, 150], // Replace with actual data
+                    data: <?= json_encode(array_column($payment_types, 'amount')) ?>,
                     backgroundColor: [
-                        'rgb(23, 64, 91)',
-                        'rgb(174, 69, 97)'
-                    ]
+                        'rgba(10, 136, 143, 0.7)',
+                        'rgba(253, 126, 20, 0.7)'
+                    ],
+                    borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Payment Types Breakdown'
-                    }
-                }
+                cutout: '70%'
             }
         });
     </script>

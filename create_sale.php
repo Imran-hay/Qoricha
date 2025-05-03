@@ -10,13 +10,13 @@ require 'agent_sidebar.php';
 require 'config.php';
 
 // Fetch products for the dropdown (we still need the item_id and item_name)
-$products = $pdo->query("SELECT item_id, item_name FROM items")->fetchAll(PDO::FETCH_ASSOC);
+$products = $pdo->query("SELECT item_id, item_name, stock FROM items")->fetchAll(PDO::FETCH_ASSOC);
 
 // Handle form submission
 $message = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $customer_name = $_POST['customer_name'];
-    $quantity = $_POST['quantity'];
+    $quantity = (int)$_POST['quantity'];  // Cast to integer
     $item_id = $_POST['item_id'];
     $selling_price = $_POST['selling_price'];
     $total_amount = $quantity * $selling_price;
@@ -44,19 +44,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (empty($message)) {
+        // Start a transaction to ensure atomicity
         try {
-            $stmt = $pdo->prepare("
+            $pdo->beginTransaction();
 
-            INSERT INTO sales (customer_name, quantity, item_id, total_amount, payment_type, due_date, transaction_number, bank_statement, user_id, status)
-            
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            
+            // 1. Check if there's enough stock
+            $stmt = $pdo->prepare("SELECT stock FROM items WHERE item_id = ?");
+            $stmt->execute([$item_id]);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$item || $item['stock'] < $quantity) {
+                throw new Exception("Insufficient stock for this item.");
+            }
+
+            // 2. Insert the sale
+            $stmt = $pdo->prepare("
+                INSERT INTO sales (customer_name, quantity, item_id, total_amount, payment_type, due_date, transaction_number, bank_statement, user_id, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            
             $stmt->execute([$customer_name, $quantity, $item_id, $total_amount, $payment_type, $due_date, $transaction_number, $bank_statement, $_SESSION['user_id'], 'pending']); // Added 'pending' status
-            
-            $message = "Sale created successfully!";
+
+
+            // 3. Update the stock
+            $new_stock = $item['stock'] - $quantity;
+            $stmt = $pdo->prepare("UPDATE items SET stock = ? WHERE item_id = ?");
+            $stmt->execute([$new_stock, $item_id]);
+
+            // Commit the transaction
+            $pdo->commit();
+
+            $message = "Sale created successfully and stock updated!";
         } catch (PDOException $e) {
+            // Rollback the transaction if there's an error
+            $pdo->rollBack();
+            $message = "Error creating sale: " . $e->getMessage();
+        } catch (Exception $e) {
+            // Rollback the transaction if there's an error
+            $pdo->rollBack();
             $message = "Error creating sale: " . $e->getMessage();
         }
     }
@@ -73,16 +97,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             font-family: 'Ubuntu', sans-serif;
+<<<<<<< HEAD
             background-color: #f4f6f9;
             color: #343a40;
+=======
+            background-color: #f9f9f9;
+            color: #333;
+            margin-left: 280px; /* Adjust for sidebar width */
+>>>>>>> 339a5cbb56c6b6509fa1dd5f729f84c034a2e84a
         }
         .content {
-            padding: 20px;
+            padding: 30px;
+            padding-right: 50px;
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             max-width: 600px;
             margin: 20px auto;
+            margin-left: 80px; /* Adjust for sidebar width */
         }
         h1 {
             margin-bottom: 20px;
@@ -189,7 +221,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="" disabled selected>Select a product</option>
                     <?php foreach ($products as $product): ?>
                         <option value="<?php echo $product['item_id']; ?>">
-                            <?php echo htmlspecialchars($product['item_name']); ?>
+                            <?php echo htmlspecialchars($product['item_name'] . " (Stock: " . $product['stock'] . ")"); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

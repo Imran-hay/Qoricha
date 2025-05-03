@@ -1,8 +1,8 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-   // header("Location: login.php");
-   // exit();
+    // header("Location: login.php");
+    exit();
 }
 require 'sidebar.php'; // Assuming you have an admin sidebar
 require 'config.php';
@@ -37,7 +37,7 @@ $stmt = $pdo->query("SELECT s.sale_id, s.customer_name, s.quantity, i.item_name,
                      FROM sales s
                      JOIN items i ON s.item_id = i.item_id
                      JOIN users u ON s.user_id = u.user_id
-                     ORDER BY s.status, s.sale_id"); // Order by status then sale_id
+                     ORDER BY s.status, s.sale_id");
 $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
@@ -48,23 +48,28 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Approvals</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="style.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
+            color: #333;
         }
         .content {
             margin-left: 120px; /* Adjust for sidebar width */
             padding: 20px;
             background: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
         }
         h1 {
             margin-bottom: 20px;
+            color: #007bff;
+            text-align: center;
         }
         table {
             width: 100%;
@@ -72,39 +77,48 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-top: 20px;
         }
         th, td {
-            padding: 10px;
+            padding: 15px;
             text-align: left;
             border: 1px solid #ddd;
         }
         th {
-            background: #f2f2f2;
+            background: #007bff;
+            color: white;
         }
         tr:hover {
             background: #f1f1f1;
         }
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 10px;
         }
         .action-buttons button {
-            padding: 5px 10px;
+            padding: 10px 15px;
             border: none;
-            border-radius: 3px;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background 0.3s;
         }
         .approve-button {
-            background-color: #4CAF50;
+            background-color: #28a745; /* Green */
             color: white;
         }
+        .approve-button:hover {
+            background-color: #218838;
+        }
         .reject-button {
-            background-color: #f44336;
+            background-color: #dc3545; /* Red */
             color: white;
+        }
+        .reject-button:hover {
+            background-color: #c82333;
         }
         .message {
             margin-bottom: 10px;
-            padding: 8px;
+            padding: 10px;
             border-radius: 5px;
             text-align: center;
+            font-weight: bold;
         }
         .success {
             background-color: #d4edda;
@@ -116,11 +130,16 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+                width: 100%;
+            }
+            table {
+                font-size: 14px;
+            }
+        }
     </style>
-
-<script>
-       
-    </script>
 </head>
 <body>
     <div class="content">
@@ -153,20 +172,20 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <td><?php echo htmlspecialchars($sale['customer_name']); ?></td>
                             <td><?php echo htmlspecialchars($sale['item_name']); ?></td>
                             <td><?php echo htmlspecialchars($sale['quantity']); ?></td>
-                            <td><?php echo htmlspecialchars($sale['total_amount']); ?></td>
+                            <td>₱<?php echo number_format($sale['total_amount'], 2); ?></td>
                             <td><?php echo htmlspecialchars($sale['due_date']); ?></td>
                             <td><?php echo htmlspecialchars($sale['payment_type']); ?></td>
                             <td><?php echo htmlspecialchars($sale['agent_name']); ?></td>
                             <td><?php echo isset($sale['status']) ? htmlspecialchars($sale['status']) : 'N/A'; ?></td>
                             <td>
-                            <?php if (isset($sale['status']) && $sale['status'] === 'pending' && isset($sale['payment_type']) && $sale['payment_type'] === 'Credit'): ?>
+                                <?php if (isset($sale['status']) && $sale['status'] === 'pending' && isset($sale['payment_type']) && $sale['payment_type'] === 'Credit'): ?>
                                     <div class="action-buttons">
-                                        <form method="POST">
+                                        <form method="POST" action="">
                                             <input type="hidden" name="sale_id" value="<?php echo htmlspecialchars($sale['sale_id']); ?>">
                                             <input type="hidden" name="action" value="approve">
                                             <button type="submit" class="approve-button">Approve</button>
                                         </form>
-                                        <form method="POST">
+                                        <form method="POST" action="">
                                             <input type="hidden" name="sale_id" value="<?php echo htmlspecialchars($sale['sale_id']); ?>">
                                             <input type="hidden" name="action" value="reject">
                                             <button type="submit" class="reject-button">Reject</button>

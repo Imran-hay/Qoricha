@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 if (isset($_GET['download'])) {
     require 'config.php'; // Only require what's needed for the download
-    
+
     $sale_id = $_GET['download'];
 
     // Fetch the bank statement file path from the database
@@ -34,32 +34,109 @@ if (isset($_GET['download'])) {
 require 'cashier_sidebar.php'; // Assuming you have a cashier sidebar
 require 'config.php';
 
+// Function to update the balance
+function updateBalance($pdo, $amount, $is_addition = false) {
+    // Check if we're already in a transaction
+    $inTransaction = $pdo->inTransaction();
+
+    try {
+        // Only begin a new transaction if we're not already in one
+        if (!$inTransaction) {
+            $pdo->beginTransaction();
+        }
+
+        // Get the current balance
+        $stmt = $pdo->prepare("SELECT current_balance FROM balance LIMIT 1 FOR UPDATE");
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to execute balance query.");
+        }
+
+        $balance = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$balance) {
+            throw new Exception("Balance record not found. Please create a balance record first.");
+        }
+
+        $current_balance = (float)$balance['current_balance'];
+        $new_balance = $is_addition ? ($current_balance + $amount) : ($current_balance - $amount);
+
+        // Update the balance
+        $updateStmt = $pdo->prepare("UPDATE balance SET current_balance = ?");
+        if (!$updateStmt->execute([$new_balance])) {
+            throw new Exception("Failed to execute balance update.");
+        }
+
+        // Only commit if we started the transaction
+        if (!$inTransaction) {
+            $pdo->commit();
+        }
+
+        return true;
+    } catch (Exception $e) {
+        // Only rollback if we started the transaction AND we're still in a transaction
+        if (!$inTransaction && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Balance update error: " . $e->getMessage());
+        throw $e; // Re-throw the exception to be caught by the calling function
+    }
+}
+
+
 // Handle approval/rejection/undo actions
 $message = ''; // Initialize message variable
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sale_id = $_POST['sale_id'];
     $action = $_POST['action'];
 
-    if ($action === 'approve') {
-        $new_status = 'approved';
-    } elseif ($action === 'reject') {
-        $new_status = 'rejected';
-    } elseif ($action === 'undo') {
-        $new_status = 'pending';
-    }
-    else {
-        // Invalid action
-        $message = "Invalid action.";
-    }
+    try {
+        // Start a transaction
+        $pdo->beginTransaction();
 
-    if (isset($new_status)) {
-        try {
-            $stmt = $pdo->prepare("UPDATE sales SET status = ? WHERE sale_id = ?");
-            $stmt->execute([$new_status, $sale_id]);
-            $message = "Sale status updated successfully.";
-        } catch (PDOException $e) {
-            $message = "Error updating sale status: " . $e->getMessage();
+        // Fetch the total amount for the sale BEFORE updating the status
+        $stmt = $pdo->prepare("SELECT total_amount, status FROM sales WHERE sale_id = ?");
+        $stmt->execute([$sale_id]);
+        $sale = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$sale) {
+            throw new Exception("Sale not found.");
         }
+
+        $total_amount = (float)$sale['total_amount'];
+        $old_status = $sale['status'];
+
+
+        if ($action === 'approve') {
+            $new_status = 'approved';
+            if ($old_status !== 'approved') {
+                updateBalance($pdo, $total_amount, true); // Add to balance
+            }
+        } elseif ($action === 'reject') {
+            $new_status = 'rejected';
+            // No balance update needed on rejection
+        } elseif ($action === 'undo') {
+            $new_status = 'pending';
+            if ($old_status === 'approved') {
+                updateBalance($pdo, $total_amount, false); // Subtract from balance
+            }
+        } else {
+            // Invalid action
+            throw new Exception("Invalid action.");
+        }
+
+        // Update the sale status
+        $stmt = $pdo->prepare("UPDATE sales SET status = ? WHERE sale_id = ?");
+        $stmt->execute([$new_status, $sale_id]);
+
+        // Commit the transaction
+        $pdo->commit();
+
+        $message = "Sale status updated successfully.";
+    } catch (Exception $e) {
+        // Rollback the transaction
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $message = "Error updating sale status: " . $e->getMessage();
     }
 }
 
@@ -120,7 +197,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 20px;
         }
         .content {
-            margin-left: 220px; /* Adjust for sidebar width */
+            margin-left: 100px; /* Adjust for sidebar width */
             padding: 20px;
             background: #fff;
             border-radius: 5px;
