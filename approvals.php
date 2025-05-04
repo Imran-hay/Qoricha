@@ -157,7 +157,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Product</th>
                     <th>Quantity</th>
                     <th>Amount</th>
-                    <th>Due Date</th>
+                    <th> Date</th>
                     <th>Payment Type</th>
                     <th>Agent</th>
                     <th>Status</th>
