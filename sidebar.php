@@ -386,8 +386,8 @@
                 </button>
                 <ul id="reportsSubMenu" class="submenu">
                      <li><a href="stock_report.php">Stock List</a></li>
-                    <!--<li><a href="cash_sales.php">Cash Sales</a></li>
-                    <li><a href="credit_sales.php">Credit Sales</a></li>
+                    <li><a href="sales_report.php">Sales Report</a></li>
+                    <!--<li><a href="credit_sales.php">Credit Sales</a></li>
                     <li><a href="agent_cash_sales.php">Agent Cash Sales</a></li>
                     <li><a href="commission_calculator.php">Commission Calculator</a></li>
                     <li><a href="agent_credit_sales.php">Agent Credit Sales</a></li> -->
