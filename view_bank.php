@@ -3,7 +3,7 @@ session_start();
 
 // Include database configuration
 require 'config.php';
-require 'agent_sidebar.php';
+require 'sidebar.php';
 
 // Fetch banks from the database
 try {

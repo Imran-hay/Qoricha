@@ -97,14 +97,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             font-family: 'Ubuntu', sans-serif;
-<<<<<<< HEAD
-            background-color: #f4f6f9;
-            color: #343a40;
-=======
             background-color: #f9f9f9;
             color: #333;
             margin-left: 280px; /* Adjust for sidebar width */
->>>>>>> 339a5cbb56c6b6509fa1dd5f729f84c034a2e84a
         }
         .content {
             padding: 30px;
@@ -161,7 +156,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #d9534f;
         }
         #bank_statement_container {
-            display: none;
         }
     </style>
     <script>
@@ -186,12 +180,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         document.addEventListener("DOMContentLoaded", function() {
             var paymentTypeSelect = document.getElementById("payment_type");
             var bankStatementContainer = document.getElementById("bank_statement_container");
+            var transactionNumberInput = document.getElementById("transaction_number");
+            var bankStatementInput = document.getElementById("bank_statement");
 
             function toggleBankStatementFields() {
                 if (paymentTypeSelect.value === "Cash") {
                     bankStatementContainer.style.display = "block";
+                    transactionNumberInput.required = true;
+                    bankStatementInput.required = true;
                 } else {
                     bankStatementContainer.style.display = "none";
+                    transactionNumberInput.required = false;
+                    bankStatementInput.required = false;
                 }
             }
 
@@ -237,8 +237,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div>
                 <label for="payment_type">Payment Type:</label>
                 <select id="payment_type" name="payment_type" required>
-                    <option value="Credit" selected>Credit</option>
-                    <option value="Cash">Cash</option>
+                    <option value="Cash" selected>Cash</option>
+                    <option value="Credit">Credit</option>
                 </select>
             </div>
             <div>
@@ -247,9 +247,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div id="bank_statement_container">
                 <label for="transaction_number">Transaction Number:</label>
-                <input type="text" required id="transaction_number" name="transaction_number">
+                <input type="text" id="transaction_number" name="transaction_number" required>
                 <label for="bank_statement">Upload Bank Statement Slip:</label>
-                <input type="file" required id="bank_statement" name="bank_statement" accept=".pdf,.jpg,.jpeg,.png">
+                <input type="file" id="bank_statement" name="bank_statement" accept=".pdf,.jpg,.jpeg,.png" required>
             </div>
             <button type="submit">Submit Sale</button>
             <?php if (isset($show_undo) && $show_undo): ?>

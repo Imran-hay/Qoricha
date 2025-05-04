@@ -6,6 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
 }
 
 require 'config.php';
+require 'sidebar.php';
 
 $message = "";
 
@@ -13,7 +14,7 @@ $message = "";
 function updateBalance($pdo, $amount, $is_addition = false) {
     // Check if we're already in a transaction
     $inTransaction = $pdo->inTransaction();
-    
+
     try {
         // Only begin a new transaction if we're not already in one
         if (!$inTransaction) {
@@ -44,7 +45,7 @@ function updateBalance($pdo, $amount, $is_addition = false) {
         if (!$inTransaction) {
             $pdo->commit();
         }
-        
+
         return true;
     } catch (Exception $e) {
         // Only rollback if we started the transaction
@@ -157,205 +158,343 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Expenses</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* General body and content styles (consistent with dashboard) */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
             margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 20px;
+            color: #343a40;
         }
 
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            background-color: #fff;
+        .content {
+            margin-left: 280px;
             padding: 30px;
-            margin: 30px auto;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
         }
 
         h1 {
-            color: #2c3e50;
+            margin-bottom: 25px;
+            color: #4361ee;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
+            font-weight: 600;
         }
 
-        .message {
-            text-align: center;
+        h2 {
+            color: #4361ee;
+            margin-top: 30px;
+            font-weight: 500;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        th, td {
             padding: 15px;
+            text-align: left;
+            border: 1px solid #e9ecef;
+        }
+
+        th {
+            background: #4361ee;
+            color: white;
+            font-weight: 500;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e6f0ff;
+        }
+
+        /* Message Styles */
+        .message {
             margin-bottom: 20px;
+            padding: 15px;
             border-radius: 8px;
-            color: #fff;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .success {
-            background-color: #27ae60;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
         .error {
-            background-color: #e74c3c;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
-        /* Add Expense Form (Initially Hidden) */
+        /* Expense Form Styles */
         .add-expense-form {
-            display: none; /* Initially hidden */
+            display: none;
             margin-bottom: 30px;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #ecf0f1;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         .add-expense-form h2 {
-            color: #34495e;
+            margin-top: 0;
             margin-bottom: 20px;
-            text-align: center;
+            color: #4361ee;
         }
 
         .form-group {
             margin-bottom: 15px;
         }
 
-        .form-group label {
+        .add-expense-form label {
             display: block;
-            margin-bottom: 5px;
-            color: #34495e;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
         }
 
-        .form-group input[type="text"],
-        .form-group input[type="date"],
-        .form-group select,
-        .form-group textarea {
+        .add-expense-form input[type="text"],
+        .add-expense-form input[type="date"],
+        .add-expense-form input[type="number"],
+        .add-expense-form select,
+        .add-expense-form textarea {
             width: 100%;
             padding: 10px;
-            border: 1px solid #bdc3c7;
-            border-radius: 5px;
-            font-size: 16px;
-            color: #34495e;
+            margin-bottom: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
             box-sizing: border-box;
+            transition: border-color 0.3s;
         }
 
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
+        .add-expense-form input[type="text"]:focus,
+        .add-expense-form input[type="date"]:focus,
+        .add-expense-form input[type="number"]:focus,
+        .add-expense-form select:focus,
+        .add-expense-form textarea:focus {
+            border-color: #4361ee;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
 
-        .add-expense-form button[type="submit"] {
-            background-color: #3498db;
-            color: #fff;
+        .add-expense-form button {
+            background-color: #28a745;
+            color: white;
             padding: 12px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-weight: 500;
+            transition: background-color 0.3s;
         }
 
-        .add-expense-form button[type="submit"]:hover {
-            background-color: #2980b9;
-        }
-
-        /* Expense List Table */
-        .expense-list {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .expense-list th,
-        .expense-list td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .expense-list th {
-            background-color: #3498db;
-            color: #fff;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .expense-list tbody tr:hover {
-            background-color: #f0f0f0;
-        }
-
-        .expense-list .actions {
-            text-align: center;
-        }
-
-        .expense-list .actions a {
-            display: inline-block;
-            margin: 0 5px;
-            color: #fff;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-
-        .expense-list .actions .delete {
-            background-color: #e74c3c;
-        }
-
-        .expense-list .actions a:hover {
-            opacity: 0.8;
+        .add-expense-form button:hover {
+            background-color: #218838;
         }
 
         /* Add Expense Button */
         .add-expense-button {
-            background-color: #27ae60;
-            color: #fff;
+            background-color: #4361ee;
+            color: white;
             padding: 12px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-weight: 500;
             margin-bottom: 20px;
             display: inline-block;
-            text-decoration: none;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .add-expense-button:hover {
-            background-color: #219653;
+            background-color: #3a56d4;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                width: 95%;
+        /* Delete Button Style */
+        .delete {
+            color: #dc3545;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .delete:hover {
+            color: #c82333;
+            text-decoration: underline;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .pagination a {
+            display: inline-block;
+            padding: 10px 15px;
+            text-decoration: none;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #4361ee;
+            border-radius: 6px;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .pagination a:hover {
+            background-color: #e6f0ff;
+            border-color: #4361ee;
+        }
+
+        .pagination .current {
+            background-color: #4361ee;
+            color: white;
+            border-color: #4361ee;
+        }
+
+        .pagination .page-info {
+            display: inline-block;
+            margin: 0 15px;
+            font-size: 16px;
+            color: #495057;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .content {
+                margin-left: 0;
                 padding: 20px;
             }
+        }
 
-            .expense-list {
-                overflow-x: auto;
+        @media (max-width: 768px) {
+            table {
+                font-size: 14px;
             }
-
-            .expense-list th,
-            .expense-list td {
-                white-space: nowrap;
+            
+            th, td {
+                padding: 10px;
+            }
+            
+            .add-expense-button {
+                width: 100%;
+                text-align: center;
             }
         }
     </style>
+</head>
+
+<body>
+    <div class="content">
+        <h1>Manage Expenses</h1>
+
+        <?php if ($message): ?>
+        <div class="message <?php echo strpos($message, 'Error') === false ? 'success' : 'error'; ?>">
+            <?php echo htmlspecialchars($message); ?>
+        </div>
+        <?php endif; ?>
+
+        <button class="add-expense-button" onclick="toggleAddExpenseForm()">
+            <i class="fas fa-plus-circle"></i> Add New Expense
+        </button>
+
+        <div id="addExpenseForm" class="add-expense-form">
+            <h2>Add New Expense</h2>
+            <form method="POST" action="">
+                <div class="form-group">
+                    <label for="category_id">Category:</label>
+                    <select id="category_id" name="category_id" required>
+                        <?php if (empty($categories)): ?>
+                        <option value="">No categories found</option>
+                        <?php else: ?>
+                        <?php foreach ($categories as $category): ?>
+                        <option value="<?php echo $category['category_id']; ?>">
+                            <?php echo htmlspecialchars($category['category_name']); ?></option>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount:</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense_date">Date:</label>
+                    <input type="date" id="expense_date" name="expense_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+                <button type="submit" name="add_expense">
+                    <i class="fas fa-save"></i> Save Expense
+                </button>
+            </form>
+        </div>
+
+        <h2>Expense Records</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($expenses)): ?>
+                <tr>
+                    <td colspan="5">No expenses found.</td>
+                </tr>
+                <?php else: ?>
+                <?php foreach ($expenses as $expense): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($expense['category_name']); ?></td>
+                    <td>₱<?php echo number_format($expense['amount'], 2); ?></td>
+                    <td><?php echo htmlspecialchars($expense['expense_date']); ?></td>
+                    <td><?php echo htmlspecialchars($expense['description']); ?></td>
+                    <td>
+                        <a href="#" class="delete" onclick="confirmDelete('<?php echo $expense['expense_id']; ?>')">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
     <script>
         function toggleAddExpenseForm() {
-            var form = document.querySelector('.add-expense-form');
+            var form = document.getElementById('addExpenseForm');
             form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
         }
 
@@ -383,81 +522,5 @@ try {
             }
         }
     </script>
-</head>
-<body>
-    <div class="container">
-        <h1>Manage Expenses</h1>
-
-        <?php if ($message): ?>
-            <div class="message <?php echo strpos($message, 'Error') === false ? 'success' : 'error'; ?>">
-                <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-
-        <a href="#" class="add-expense-button" onclick="toggleAddExpenseForm()">Add New Expense</a>
-
-        <div class="add-expense-form">
-            <h2>Add New Expense</h2>
-            <form method="POST" action="">
-                <div class="form-group">
-                    <label for="category_id">Category:</label>
-                    <select id="category_id" name="category_id" required>
-                        <?php if (empty($categories)): ?>
-                            <option value="">No categories found</option>
-                        <?php else: ?>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo $category['category_id']; ?>"><?php echo htmlspecialchars($category['category_name']); ?></option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="amount">Amount:</label>
-                    <input type="text" id="amount" name="amount" required>
-                </div>
-                <div class="form-group">
-                    <label for="expense_date">Date:</label>
-                    <input type="date" id="expense_date" name="expense_date" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea id="description" name="description"></textarea>
-                </div>
-                <button type="submit" name="add_expense">Add Expense</button>
-            </form>
-        </div>
-
-        <h2>Existing Expenses</h2>
-        <table class="expense-list">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th class="actions">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($expenses)): ?>
-                    <tr>
-                        <td colspan="5">No expenses found.</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($expenses as $expense): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($expense['category_name']); ?></td>
-                            <td><?php echo htmlspecialchars($expense['amount']); ?></td>
-                            <td><?php echo htmlspecialchars($expense['expense_date']); ?></td>
-                            <td><?php echo htmlspecialchars($expense['description']); ?></td>
-                            <td class="actions">
-                                <a href="#" class="delete" onclick="confirmDelete('<?php echo $expense['expense_id']; ?>')"><i class="fas fa-trash-alt"></i> Delete</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
 </body>
 </html>

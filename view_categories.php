@@ -82,31 +82,34 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 20px;
+            color: #333;
         }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            background-color: #fff;
+        .content {
+            margin-left: 280px;
             padding: 30px;
-            margin: 30px auto;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        .container {
+            
+            margin-left: 120px; /* Adjust for sidebar width */
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
         }
 
         h1 {
-            color: #2c3e50;
+            margin-bottom: 20px;
+            color: #007bff;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
         }
 
         .message {
@@ -124,19 +127,25 @@ try {
         .error {
             background-color: #e74c3c;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
 
         /* Add Category Form (Initially Hidden) */
         .add-category-form {
             display: none; /* Initially hidden */
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             padding: 20px;
-            border-radius: 8px;
-            background-color: #ecf0f1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
         }
 
         .edit-category-form {
             display: none;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             padding: 20px;
             border-radius: 8px;
             background-color: #ecf0f1;
@@ -246,11 +255,11 @@ try {
 
         /* Add Category Button */
         .add-category-button {
-            background-color: #27ae60;
+            background-color: #4361ee;
             color: #fff;
             padding: 12px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease;

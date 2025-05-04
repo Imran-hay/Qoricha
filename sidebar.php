@@ -305,6 +305,13 @@
                   
                 </a>
             </li>
+            <li>
+                <a href="credit_sales.php">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-truck-field"></i></span>
+                    <span class="text">My Credit</span>
+                </a>
+            </li>
             
             <li>
                 <button onclick="toggleSubMenu(this, 'manageBankSubMenu')">
@@ -315,7 +322,7 @@
                 </button>
                 <ul id="manageBankSubMenu" class="submenu">
                     <li><a href="add_bank.php">Add Bank</a></li>
-                    <li><a href="view_banks.php">View Banks</a></li>
+                    <li><a href="view_bank.php">View Banks</a></li>
                 </ul>
             </li>
             
@@ -347,7 +354,7 @@
             </li>
             
             <li>
-                <a href="manage_customers.php">
+                <a href="customers.php">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-users-between-lines"></i></span>
                     <span class="text">Manage Customers</span>
@@ -355,7 +362,7 @@
             </li>
             
             <li>
-                <a href="manage_suppliers.php">
+                <a href="view_suppliers.php">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-truck-field"></i></span>
                     <span class="text">Manage Suppliers</span>
@@ -378,8 +385,8 @@
                     <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
                 </button>
                 <ul id="reportsSubMenu" class="submenu">
-                 <!--    <li><a href="stock_list.php">Stock List</a></li>
-                    <li><a href="cash_sales.php">Cash Sales</a></li>
+                     <li><a href="stock_report.php">Stock List</a></li>
+                    <!--<li><a href="cash_sales.php">Cash Sales</a></li>
                     <li><a href="credit_sales.php">Credit Sales</a></li>
                     <li><a href="agent_cash_sales.php">Agent Cash Sales</a></li>
                     <li><a href="commission_calculator.php">Commission Calculator</a></li>
