@@ -26,9 +26,14 @@ $sales_table_exists = $pdo->query("SHOW TABLES LIKE 'sales'")->rowCount() > 0;
 
 if ($sales_table_exists) {
     // Total sales count
-    $total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ?");
+    $total_sales_stmt = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE user_id = ? AND status = 'approved'");
     $total_sales_stmt->execute([$_SESSION['user_id']]);
     $total_sales = $total_sales_stmt->fetchColumn();
+
+
+    $pending_approvals_stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? AND status = 'pending'");
+    $pending_approvals_stmt->execute([$_SESSION['user_id']]);
+    $pending_approvals = $pending_approvals_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Daily sales amount (using total_amount field)
     $daily_sales_stmt = $pdo->prepare("
@@ -73,10 +78,7 @@ if ($sales_table_exists) {
 $approvals_table_exists = $pdo->query("SHOW TABLES LIKE 'approvals'")->rowCount() > 0;
 
 // Dummy approvals data since table doesn't exist
-$pending_approvals = [
-    ['id' => 1, 'sale_id' => 1001, 'customer_name' => 'Sample Customer', 'total_amount' => 1500],
-    ['id' => 2, 'sale_id' => 1002, 'customer_name' => 'Another Customer', 'total_amount' => 2500]
-];
+
 
 // Weekly sales data for chart (simulated since we don't have historical data)
 $weekly_sales = [
