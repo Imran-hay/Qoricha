@@ -358,7 +358,7 @@ $total_pages = ceil($total_results / $results_per_page);
                 <label for="selling_price">Selling Price:</label>
                 <input type="number" id="selling_price" name="selling_price" step="0.01" min="0" required>
 
-                <label for="due_date">Due Date:</label>
+                <label for="due_date">Date:</label>
                 <input type="date" id="due_date" name="due_date" required>
 
                 <button type="submit">Create Credit Sale</button>
@@ -374,7 +374,7 @@ $total_pages = ceil($total_results / $results_per_page);
                     <th>Product</th>
                     <th>Quantity</th>
                     <th>Amount</th>
-                    <th>Due Date</th>
+                    <th>Date</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -429,7 +429,7 @@ $total_pages = ceil($total_results / $results_per_page);
 
             // AutoTable settings
             const tableData = <?php echo json_encode($credit_sales); ?>; // Pass PHP array to JavaScript
-            const tableHeaders = ["Sale ID", "Customer Name", "Product", "Quantity", "Amount", "Due Date", "Status"];
+            const tableHeaders = ["Sale ID", "Customer Name", "Product", "Quantity", "Amount", "Date", "Status"];
 
             // Prepare data for autoTable
             const data = tableData.map(sale => [

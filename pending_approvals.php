@@ -388,7 +388,7 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                             
                             <div class="detail-row">
-                                <span class="detail-label">Due Date</span>
+                                <span class="detail-label">Date</span>
                                 <span class="detail-value highlight">
                                     <i class="far fa-calendar-alt"></i> 
                                     <?php echo date('M d, Y', strtotime($sale['due_date'])); ?>

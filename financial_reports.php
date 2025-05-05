@@ -10,11 +10,26 @@ if (!isset($_SESSION['user_id'])) {
 
 // Include database configuration
 require 'config.php';
+$agent_commissions = $pdo->query("SELECT u.fullname AS agent_name,
+        SUM(s.total_amount) AS total_sold,
+        SUM(s.total_amount) * 0.01 AS commission
+    FROM 
+        sales s
+    JOIN 
+        users u ON s.user_id = u.user_id
+    WHERE 
+        s.status = 'approved'
+    GROUP BY 
+        u.user_id")->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch financial data based on the actual database schema
 $financial_data = [
     // Summary stats
-    'total_sales' => $pdo->query("SELECT SUM(total_amount) FROM sales")->fetchColumn() ?? 0,
+    'total_sales' => $pdo->query("SELECT SUM(total_amount) FROM sales WHERE status = 'approved'")->fetchColumn() ?? 0,
+    'total_cost' => $pdo->query("SELECT SUM(i.unit_price * s.quantity) 
+    FROM sales s
+    JOIN items i ON s.item_id = i.item_id
+    WHERE s.status = 'approved'")->fetchColumn() ?? 0,
     'total_expenses' => $pdo->query("SELECT SUM(amount) FROM expenses")->fetchColumn() ?? 0,
     'total_balance' => $pdo->query("SELECT current_balance FROM balance LIMIT 1")->fetchColumn() ?? 0,
     'total_repayments' => $pdo->query("SELECT SUM(amount) FROM repayments WHERE status = 'completed'")->fetchColumn() ?? 0,
@@ -453,6 +468,22 @@ $financial_data = [
             <div class="summary-card balance">
                 <div class="card-header">
                     <div>
+                        <div class="card-title">Profit</div>
+                        <div class="card-value">ETB <?= number_format(
+    $financial_data['total_sales'] - $financial_data['total_cost'] - $financial_data['total_expenses'], 2) ?></div>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-dollar"></i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <i class="fas fa-info-circle"></i> Net profit after expenses
+                </div>
+            </div>
+
+            <div class="summary-card balance">
+                <div class="card-header">
+                    <div>
                         <div class="card-title">Current Balance</div>
                         <div class="card-value">ETB <?= number_format($financial_data['total_balance'], 2) ?></div>
                     </div>
@@ -525,6 +556,33 @@ $financial_data = [
                                     <?= htmlspecialchars($sale['status']) ?>
                                 </span>
                             </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Agent Commissions</h3>
+                    <a href="" class="view-all">View All</a>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Commission</th>
+                            <th>Total Sold</th>
+                        
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($agent_commissions as $agent): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($agent['agent_name']) ?></td>
+                            <td class="amount-cell">ETB <?= number_format($agent['commission'], 2) ?></td>
+                            <td class="amount-cell">ETB <?= $agent['total_sold'] ?></td>
+                          
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

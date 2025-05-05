@@ -13,7 +13,7 @@ require 'config.php';
 
 // Fetch dashboard data
 $dashboard_data = [
-    'total_sales' => $pdo->query("SELECT SUM(total_amount) FROM sales")->fetchColumn() ?? 0,
+    'total_sales' => $pdo->query("SELECT SUM(total_amount) FROM sales WHERE status = 'approved'")->fetchColumn() ?? 0,
     'current_balance' => $pdo->query("SELECT current_balance FROM balance LIMIT 1")->fetchColumn() ?? 0,
     'total_withdrawals' => $pdo->query("SELECT SUM(amount) FROM withdrawals")->fetchColumn() ?? 0,
     'total_expenses' => $pdo->query("SELECT SUM(amount) FROM expenses")->fetchColumn() ?? 0,
@@ -547,16 +547,10 @@ $dashboard_data = [
                         <?php foreach ($dashboard_data['recent_repayments'] as $repayment): ?>
                         <tr>
                             <td>#<?= htmlspecialchars($repayment['sale_id']) ?></td>
-                            <td>₱<?= number_format($repayment['amount'], 2) ?></td>
+                            <td>$<?= number_format($repayment['amount'], 2) ?></td>
                             <td><?= htmlspecialchars($repayment['date']) ?></td>
-                            <td>
-                                <span class="badge <?= 
-                                    $repayment['status'] === 'completed' ? 'success' : 
-                                    ($repayment['status'] === 'failed' ? 'danger' : 'warning') 
-                                ?>">
-                                    <?= htmlspecialchars(ucfirst($repayment['status'])) ?>
-                                </span>
-                            </td>
+                            <td><?= htmlspecialchars($repayment['status']) ?></td>
+                          
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

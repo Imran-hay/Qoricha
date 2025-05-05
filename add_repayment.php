@@ -461,7 +461,7 @@ function getRepaymentsForSale($pdo, $sale_id) {
                                 <span class="detail-value amount">ETB <?php echo number_format($sale['total_amount'], 2); ?></span>
                             </div>
                             <div class="detail-row">
-                                <span class="detail-label">Due Date</span>
+                                <span class="detail-label">Sale Date</span>
                                 <span class="detail-value"><?php echo date('M d, Y', strtotime($sale['due_date'])); ?></span>
                             </div>
                         </div>

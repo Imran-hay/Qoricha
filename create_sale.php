@@ -242,7 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </select>
             </div>
             <div>
-                <label for="due_date">Due Date:</label>
+                <label for="due_date">Date:</label>
                 <input type="date" id="due_date" name="due_date" required>
             </div>
             <div id="bank_statement_container">
