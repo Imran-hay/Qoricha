@@ -61,24 +61,217 @@ $agents = $pdo->query("SELECT user_id, fullname FROM users")->fetchAll(PDO::FETC
     <meta charset="UTF-8">
     <title>Sales Report</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* General body and content styles (consistent with dashboard) */
         body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: #f9f9f9;
-            margin-left: 280px;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            margin: 0;
+            padding: 0px;
+            color: ##4a5568;
         }
+
         .content {
+            margin-left: 120px; /* Adjust for sidebar width */
             padding: 30px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 1000px;
-            margin: 20px auto;
-            margin-left: 80px;
+            transition: var(--transition);
         }
-        h1 {
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-title p {
+            color: #718096;
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        /* Message Styles */
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
             text-align: center;
-            color: #764ba2;
+            font-weight: bold;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Credit Sale Form Styles (Initially Hidden) */
+        .credit-sale-form {
+            display: none;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .credit-sale-form h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: left;
+        }
+
+        .credit-sale-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .credit-sale-form input[type="text"],
+        .credit-sale-form input[type="number"],
+        .credit-sale-form input[type="date"],
+        .credit-sale-form select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .credit-sale-form button {
+            background-color: #28a745; /* Green */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .credit-sale-form button:hover {
+            background-color: #218838;
+        }
+
+        /* Add Credit Sale Button */
+        .add-credit-sale-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+
+        .add-credit-sale-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Export Button Style */
+        .export-button {
+            background-color: #6c757d; /* Gray */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            float: right;
+            margin-top: 10px;
+        }
+
+        .export-button:hover {
+            background-color: #5a6268;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+            clear: both;
+        }
+
+        .pagination a {
+            display: inline-block;
+            padding: 8px 12px;
+            text-decoration: none;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            color: #333;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        .pagination a:hover {
+            background-color: #eee;
+        }
+
+        .pagination .current {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .pagination .page-info {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            table {
+                font-size: 14px;
+            }
         }
         form {
             margin-bottom: 20px;
@@ -88,22 +281,16 @@ $agents = $pdo->query("SELECT user_id, fullname FROM users")->fetchAll(PDO::FETC
             margin-right: 10px;
             margin-bottom: 10px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ccc;
-        }
-        th {
-            background: #f4f4f4;
-        }
     </style>
 </head>
 <body>
 <div class="content">
-    <h1>Sales Report</h1>
+    <div class="page-header">
+        <div class="page-title">
+            <h1>Sales Report</h1>
+            <p>Generate detailed sales reports based on various criteria.</p>
+        </div>
+    </div>
 
     <!-- Filter Form -->
     <form method="get">
@@ -163,7 +350,7 @@ $agents = $pdo->query("SELECT user_id, fullname FROM users")->fetchAll(PDO::FETC
                 <?php foreach ($sales as $sale): ?>
                     <tr>
                         <td><?= htmlspecialchars($sale['sale_id']) ?></td>
-                        <td><?= htmlspecialchars($sale['agentgit_name']) ?></td>
+                        <td><?= htmlspecialchars($sale['agent_name']) ?></td>
                         <td><?= htmlspecialchars($sale['customer_name']) ?></td>
                         <td><?= htmlspecialchars($sale['item_name']) ?></td>
                         <td><?= htmlspecialchars($sale['quantity']) ?></td>

@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #7c3aed;
-            --accent-color: #a78bfa;
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
             --text-color: #f8fafc;
-            --hover-color: #6366f1;
-            --submenu-bg: rgba(79, 70, 229, 0.9);
-            --sidebar-bg: linear-gradient(160deg, #4f46e5 0%, #7c3aed 100%);
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            --hover-color: #3b82f6;
+            --submenu-bg: rgba(30, 64, 175, 0.8);
+            --sidebar-bg: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --border-radius: 12px;
         }
@@ -369,13 +369,13 @@
                 </a>
             </li>
             
-         <!--    <li>
-                <a href="hosted_customers.php">
+             <li>
+                <a href="all_hosted.php">
                     <span class="highlight"></span>
                     <span class="icon"><i class="fa-solid fa-house-user"></i></span>
                     <span class="text">Hosted Customers</span>
                 </a>
-            </li> -->
+            </li> 
             
             <li>
                 <button onclick="toggleSubMenu(this, 'reportsSubMenu')">
@@ -387,15 +387,23 @@
                 <ul id="reportsSubMenu" class="submenu">
                      <li><a href="stock_report.php">Stock List</a></li>
                     <li><a href="sales_report.php">Sales Report</a></li>
+                    <li><a href="commission_calculator.php">Commission Calculator</a></li>
                     <!--<li><a href="credit_sales.php">Credit Sales</a></li>
                     <li><a href="agent_cash_sales.php">Agent Cash Sales</a></li>
-                    <li><a href="commission_calculator.php">Commission Calculator</a></li>
                     <li><a href="agent_credit_sales.php">Agent Credit Sales</a></li> -->
                     <li><a href="financial_reports.php">Financial Reports</a></li>
                     <li><a href="expired_items.php">Outdated Items</a></li>
                <!--      <li><a href="credit_customer_report.php">Credit Customer Report</a></li> -->
                 </ul>
             </li>
+            <li>
+                <a href="with_holding.php">
+                    <span class="highlight"></span>
+                    <span class="icon"><i class="fa-solid fa-truck-field"></i></span>
+                    <span class="text">Manage Withholding</span>
+                </a>
+            </li>
+            
             
          <!--    <li>
                 <a href="account_settings.php">

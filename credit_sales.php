@@ -122,27 +122,39 @@ $total_pages = ceil($total_results / $results_per_page);
     <style>
         /* General body and content styles (consistent with dashboard) */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 0px;
+            color: ##4a5568;
         }
 
         .content {
             margin-left: 120px; /* Adjust for sidebar width */
-            padding: 20px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            padding: 30px;
+            transition: var(--transition);
         }
 
-        h1 {
-            margin-bottom: 20px;
-            color: #007bff;
-            text-align: center;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-title p {
+            color: #718096;
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+
 
         /* Table Styles */
         table {
@@ -323,7 +335,12 @@ $total_pages = ceil($total_results / $results_per_page);
 
 <body>
     <div class="content">
-        <h1>Manage Credit Sales</h1>
+        <div class="page-header">
+    <div class="page-title">
+    <h1>Manage Credit Sale</h1>
+    <p>View and Record a new credit transaction by selecting the customer and adding items to the sale.</p>
+</div>
+</div>
 
         <?php if (isset($error_message) && $error_message != ""): ?>
             <div class="message error"><?php echo htmlspecialchars($error_message); ?></div>

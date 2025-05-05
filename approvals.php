@@ -52,11 +52,11 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="style.css">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 0px;
+            color: #4a5568;
         }
         .content {
             margin-left: 120px; /* Adjust for sidebar width */
@@ -64,12 +64,29 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             background: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
-        h1 {
-            margin-bottom: 20px;
-            color: #007bff;
-            text-align: center;
+       
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            margin-top: 30px;
+        }
+
+
+        .page-title h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-title p {
+            color: #718096;
+            margin: 5px 0 0;
+            font-size: 15px;
         }
         table {
             width: 100%;
@@ -143,7 +160,11 @@ $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="content">
-        <h1>Sales Approvals</h1>
+        <div class="page-header">
+        <div class="page-title">
+          <h1>Credit Sales Approvals</h1>
+           <p>Review and manage credit sales submitted by your agents.</p>
+        </div>
         <?php if (isset($message)): ?>
             <div class="message <?php echo (strpos($message, 'Error') !== false) ? 'error' : 'success'; ?>">
                 <?php echo htmlspecialchars($message); ?>

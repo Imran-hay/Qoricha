@@ -16,6 +16,8 @@
             --sidebar-bg: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
             --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 12px;
+        
         }
         
         body {
@@ -304,14 +306,14 @@
                     <span class="icon"><i class="fa-solid fa-chart-simple"></i></span>
                     <span class="text">Reports & Analytics</span>
                     <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
-                </button>
+                </button> -->
                 <ul id="reportsSubMenu" class="submenu">
                     <li><a href="item_list.php">Item List</a></li>
                     <li><a href="cash_sales.php">Cash Sales</a></li>
                     <li><a href="credit_sales.php">Credit Sales</a></li>
                     <li><a href="commission_earned.php">Commission Earned</a></li>
                 </ul>
-            </li> -->
+            </li> 
             
             <li class="icon-only">
                 <a href="view_bank.php">

@@ -109,18 +109,20 @@ $payment_types = [
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #0a888f;
+           
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
             --primary-light: #e6f0ff;
             --success: #28a745;
             --danger: #dc3545;
-            --warning: #fd7e0b;
+            --warning: #fd7e14;
             --info: #17a2b8;
             --dark: #343a40;
             --light: #f8f9fa;
             --white: #ffffff;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            --transition: all 0.2s ease;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 22px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
         }
 
         body {

@@ -93,36 +93,39 @@ $total_pages = ceil($total_results / $results_per_page);
     <style>
         /* General body and content styles (consistent with dashboard) */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
             margin: 0;
-            padding: 20;
-            background-color: #f4f6f9;
-            color: #343a40;
-            
+            padding: 0px;
+            color: ##4a5568;
         }
 
         .content {
-            flex-grow: 1;
-            padding: 20px;
-            margin-left: 240px; /* Sidebar width */
-            transition: margin-left 0.3s ease;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            max-width: 1000px; /* Increased max-width for table */
-            margin: 20px auto;
-            position: relative;
+            margin-left: 120px; /* Adjust for sidebar width */
+            padding: 30px;
+            transition: var(--transition);
         }
 
-        .content.shifted {
-            margin-left: 0;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
         }
 
-        h1 {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #4361ee;
+        .page-title p {
+            color: #718096;
+            margin: 5px 0 0;
+            font-size: 14px;
         }
+
+
 
         /* Table Styles */
         table {
@@ -131,93 +134,41 @@ $total_pages = ceil($total_results / $results_per_page);
             margin-top: 20px;
         }
 
-        th, td {
-            padding: 12px 15px;
+        th,
+        td {
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #eee;
-            font-size: 16px;
+            border: 1px solid #ddd;
         }
 
         th {
-            background-color: #f9f9f9;
-            font-weight: 600;
+            background: #007bff;
+            color: white;
         }
 
         tr:hover {
-            background-color: #f5f5f5;
+            background: #f1f1f1;
         }
 
         /* Message Styles */
         .message {
-            margin-top: 20px;
-            text-align: center;
-            color: #d9534f;
-        }
-
-        /* Export Button Style */
-        .export-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px 15px;
-            border: none;
+            margin-bottom: 10px;
+            padding: 10px;
             border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-            float: right;
-            margin-top: 10px;
-        }
-
-        .export-button:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
-
-        /* Pagination Styles */
-        .pagination {
-            margin-top: 20px;
             text-align: center;
-            clear: both;
+            font-weight: bold;
         }
 
-        .pagination a {
-            display: inline-block;
-            padding: 8px 12px;
-            text-decoration: none;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            color: #333;
-            border-radius: 4px;
-            margin: 0 4px;
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
-        .pagination a:hover {
-            background-color: #eee;
-        }
-
-        .pagination .current {
-            background-color: #764ba2;
-            color: white;
-            border-color: #764ba2;
-        }
-
-        .pagination .page-info {
-            display: inline-block;
-            margin: 0 10px;
-            font-size: 16px;
-            color: #555;
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .content {
-                margin-left: 0;
-            }
-
-            th,
-            td {
-                font-size: 14px;
-                padding: 8px 10px;
-            }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         /* Add Supplier Form Styles (Initially Hidden) */
@@ -255,41 +206,113 @@ $total_pages = ceil($total_results / $results_per_page);
         }
 
         .add-supplier-form button {
-            background-color: #5cb85c;
+            background-color: #28a745; /* Green */
             color: white;
             padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            transition: background-color 0.3s;
         }
 
         .add-supplier-form button:hover {
-            background-color: #4cae4c;
+            background-color: #218838;
         }
 
         /* Add Supplier Button */
         .add-supplier-button {
-            background-color: #5bc0de;
+            background-color: #007bff;
             color: white;
             padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
             margin-bottom: 15px;
             display: inline-block;
+            transition: background-color 0.3s;
         }
 
         .add-supplier-button:hover {
-            background-color: #46b8da;
+            background-color: #0056b3;
+        }
+
+        /* Export Button Style */
+        .export-button {
+            background-color: #6c757d; /* Gray */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            float: right;
+            margin-top: 10px;
+        }
+
+        .export-button:hover {
+            background-color: #5a6268;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+            clear: both;
+        }
+
+        .pagination a {
+            display: inline-block;
+            padding: 8px 12px;
+            text-decoration: none;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            color: #333;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        .pagination a:hover {
+            background-color: #eee;
+        }
+
+        .pagination .current {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .pagination .page-info {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            th,
+            td {
+                font-size: 14px;
+                padding: 8px 10px;
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="content">
-        <h1>Manage Suppliers</h1>
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Manage Suppliers</h1>
+                <p>Add, edit, or manage supplier information.</p>
+            </div>
+        </div>
 
         <?php if (isset($error_message) && $error_message != ""): ?>
             <div class="message error"><?php echo htmlspecialchars($error_message); ?></div>
