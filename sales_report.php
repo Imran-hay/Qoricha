@@ -163,7 +163,7 @@ $agents = $pdo->query("SELECT user_id, fullname FROM users")->fetchAll(PDO::FETC
                 <?php foreach ($sales as $sale): ?>
                     <tr>
                         <td><?= htmlspecialchars($sale['sale_id']) ?></td>
-                        <td><?= htmlspecialchars($sale['agent_name']) ?></td>
+                        <td><?= htmlspecialchars($sale['agentgit_name']) ?></td>
                         <td><?= htmlspecialchars($sale['customer_name']) ?></td>
                         <td><?= htmlspecialchars($sale['item_name']) ?></td>
                         <td><?= htmlspecialchars($sale['quantity']) ?></td>
