@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
         :root {
-            --primary-color: #0a888f;
-            --secondary-color: #45d9e0;
-            --accent-color: #ff7e5f;
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
             --dark-color: #2c3e50;
             --light-color: #f8f9fa;
             --sidebar-width: 280px;

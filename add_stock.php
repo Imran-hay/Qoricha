@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transition: margin-left 0.3s ease;
         }
         h2 {
-            color: #0a888f; /* Dashboard color for heading */
+            color: #2563eb; /* Dashboard color for heading */
             text-align: center;
         }
         form {
@@ -95,11 +95,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         select, input {
             width: 100%;
             padding: 10px;
-            border: 1px solid #0a888f; /* Dashboard color for borders */
+            border: 1px solid #2563eb; /* Dashboard color for borders */
             border-radius: 5px;
         }
         .button {
-            background-color: #0a888f; /* Dashboard color for button */
+            background-color: #2563eb; /* Dashboard color for button */
             color: white;
             border: none;
             padding: 10px;
@@ -108,7 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
         }
         .button:hover {
-            background-color: #0a888f; /* Darker shade on hover */
+            background-color: #3b82f6; /* Darker shade on hover */
         }
         .message {
             text-align: center;

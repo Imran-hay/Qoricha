@@ -46,6 +46,17 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="style.css">
     <style>
         :root {
+<<<<<<< HEAD
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --light-bg: #f8f9fa;
+            --dark-color: #2c3e50;
+            --light-text: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+=======
             --primary: #4361ee;
             --primary-light: #e6f0ff;
             --success: #28a745;
@@ -54,6 +65,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             --info: #17a2b8;
             --dark: #343a40;
             --light: #f8f9fa;
+>>>>>>> 1c54f42a97ceaa973fe58f2e15631f7e88d3f1ef
             --white: #ffffff;
             --border-radius: 12px;
             --box-shadow: 0 8px 22px rgba(0,0,0,0.1);

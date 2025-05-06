@@ -25,7 +25,7 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
         :root {
             --primary-color: #4361ee;
             --secondary-color: #3a0ca3;
-            --accent-color: #4cc9f0;
+            --accent-color: #4361ee;
             --success-color: #2ecc71;
             --warning-color: #f39c12;
             --danger-color: #e74c3c;

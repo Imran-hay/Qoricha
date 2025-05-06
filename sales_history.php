@@ -42,10 +42,10 @@ $uniqueItems = count(array_unique(array_column($sales, 'item_name')));
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #6c5ce7;
-            --secondary-color: #5649c0;
-            --accent-color: #00cec9;
-            --success-color: #00b894;
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --success-color: #4361ee;
             --info-color: #0984e3;
             --warning-color: #fdcb6e;
             --danger-color: #d63031;
