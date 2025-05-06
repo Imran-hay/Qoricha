@@ -96,25 +96,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="style.css">
     <style>
          body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fb;
-            color: #4a5568;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4f6f9;
+            color: #343a40;
+            display: flex;
+            min-height: 100vh;
         }
         .content {
-            padding: 30px;
-            padding-right: 50px;
+            flex-grow: 1;
+            padding: 20px;
+            margin-left: 240px; /* Sidebar width */
+            transition: margin-left 0.3s ease;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin-left: 320px; /* Adjust for sidebar width */
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 700px; /* Reduced max-width */
+            margin: 20px auto;
         }
         h1 {
             margin-bottom: 20px;
             text-align: center;
-            color: #764ba2;
+            color: #1e40af;
         }
         form {
             display: flex;
@@ -139,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         button {
             padding: 10px;
-            background-color: #764ba2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 5px;
@@ -148,7 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transition: background 0.3s;
         }
         button:hover {
-            background-color: #0a7b7f;
+            background: linear-gradient(135deg, #764ba2 0%,#667eea 100%);
         }
         .message {
             margin-bottom: 20px;
@@ -248,8 +252,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div id="bank_statement_container">
                 <label for="transaction_number">Transaction Number:</label>
                 <input type="text" id="transaction_number" name="transaction_number" required>
-                <label for="bank_statement">Upload Bank Statement Slip:</label>
+               <div> <label for="bank_statement">Upload Bank Statement Slip:</label>
                 <input type="file" id="bank_statement" name="bank_statement" accept=".pdf,.jpg,.jpeg,.png" required>
+                </div>
             </div>
             <button type="submit">Submit Sale</button>
             <?php if (isset($show_undo) && $show_undo): ?>

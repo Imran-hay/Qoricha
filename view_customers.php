@@ -76,9 +76,8 @@ $total_pages = ceil($total_results / $results_per_page);
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            max-width: 900px; /* Increased max-width for table */
+            max-width: 800px; /* Reduced max-width */
             margin: 20px auto;
-            position: relative; /* Add position relative */
         }
 
         .content.shifted {
@@ -88,9 +87,7 @@ $total_pages = ceil($total_results / $results_per_page);
         h1 {
             margin-bottom: 20px;
             text-align: center;
-            color: #764ba2; /* Consistent color */
-        }
-
+            color: #1e40af; }
         /* Table Styles */
         table {
             width: 100%;
@@ -165,9 +162,9 @@ $total_pages = ceil($total_results / $results_per_page);
         }
 
         .pagination .current {
-            background-color: #764ba2;
+            background-color:rgb(42, 7, 130);
             color: white;
-            border-color: #764ba2;
+            border-color:rgb(32, 4, 109);
         }
 
         .pagination .page-info {

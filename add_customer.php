@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         /* Button Styles */
         button {
             padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Sidebar gradient */
+            background: linear-gradient(135deg, #667eea 0%,rgb(47, 10, 148) 100%); /* Sidebar gradient */
             color: white;
             border: none;
             border-radius: 8px;
