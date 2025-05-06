@@ -1,10 +1,10 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent') {
     //header("Location: login.php");
     //exit();
 }
-require 'admin_sidebar.php';
+require 'agent_sidebar.php';
 require 'config.php';
 
 // Fetch customers including TIN

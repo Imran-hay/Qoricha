@@ -1,12 +1,13 @@
 <?php
 session_start();
-require 'agent_sidebar.php'; 
+
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+    //header("Location: login.php");
+    //exit();
 }
 
 require 'config.php';
+require 'agent_sidebar.php'; 
 
 // Fetch user information (assuming users table exists with these fields)
 $stmt = $pdo->prepare("SELECT user_id, fullname, email, role FROM users WHERE user_id = ?");
@@ -436,7 +437,7 @@ $payment_types = [
                 <div class="action-icon"><i class="fas fa-cash-register"></i></div>
                 <div class="action-title">New Sale</div>
             </a>
-            <a href="customers.php" class="action-card">
+            <a href="view_customers.php" class="action-card">
                 <div class="action-icon"><i class="fas fa-users"></i></div>
                 <div class="action-title">Customers</div>
             </a>

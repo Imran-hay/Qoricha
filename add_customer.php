@@ -41,39 +41,72 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add New Customer</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* General body and content styles (consistent with dashboard) */
+        :root {
+            --primary: #4361ee;
+            --primary-light: #e6f0ff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #fd7e14;
+            --info: #17a2b8;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: #4a5568;
             margin: 0;
             padding: 0;
-            background-color: #f4f6f9;
-            color: #343a40;
+        }
+
+        .container {
+            margin-left: 280px;
+            padding: 30px;
+            transition: var(--transition);
+             /* Added to center the content */
             display: flex;
-            min-height: 100vh;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            min-height: calc(100vh - 60px); /* Adjust for header/footer if any */
         }
 
-        .content {
-            flex-grow: 1;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-title p {
+            color: #718096;
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--border-radius);
             padding: 20px;
-            margin-left: 240px; /* Sidebar width */
-            transition: margin-left 0.3s ease;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            max-width: 600px; /* Reduced max-width */
-            margin: 20px auto;
-        }
-
-        .content.shifted {
-            margin-left: 0;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #764ba2; /* Consistent color */
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+            width: 100%; /* Make the card wider */
+             /* Limit the maximum width */
         }
 
         /* Form Styles */
@@ -84,96 +117,124 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         label {
             margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+            font-weight: 500;
+            color: #495057;
+            display: block;
         }
 
         input[type="text"],
         input[type="email"],
         textarea {
-            padding: 10px;
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: var(--transition);
             margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box; /* Important for width consistency */
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+            outline: none;
         }
 
         /* Button Styles */
         button {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Sidebar gradient */
-            color: white;
+            padding: 10px 15px;
+            background-color: var(--primary);
+            color: var(--white);
             border: none;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
             margin-top: 10px;
         }
 
         button:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background-color: #3a56d4;
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
         }
 
         /* Message Styles */
-        .message {
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
             margin-bottom: 20px;
-            text-align: center;
-            padding: 10px;
-            border-radius: 5px;
-            display: <?php echo ($success_message != "" || $error_message != "") ? "block" : "none"; ?>; /* Conditionally show/hide */
+            font-size: 14px;
         }
 
-        .success {
-            background-color: #d4edda;
-            color: #155724;
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
         }
 
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
         }
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .content {
+            .container {
                 margin-left: 0;
+                padding: 20px;
+                 /* Center content on smaller screens */
+                justify-content: center;
+            }
+
+            .card {
+                width: 95%; /* Take up more space on smaller screens */
             }
         }
     </style>
 </head>
 <body>
-    <div class="content">
-        <h1>Add New Customer</h1>
+    <div class="container">
+        <div class="card">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Add New Customer</h2>
+                    <p>Add a new customer to the system</p>
+                </div>
+            </div>
 
-        <?php if (isset($error_message) && $error_message != ""): ?>
-            <div class="message error"><?php echo htmlspecialchars($error_message); ?></div>
-        <?php endif; ?>
+            <?php if (isset($error_message) && $error_message != ""): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
+            <?php endif; ?>
 
-        <?php if (isset($success_message) &&  $success_message != ""): ?>
-            <div class="message success"><?php echo htmlspecialchars($success_message); ?></div>
-        <?php endif; ?>
+            <?php if (isset($success_message) &&  $success_message != ""): ?>
+                <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
+            <?php endif; ?>
 
-        <form action="" method="POST">
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" required>
+            <form action="" method="POST">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
 
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
 
-            <label for="phone">Phone</label>
-            <input type="text" id="phone" name="phone" required>
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" required>
 
-            <label for="address">Address</label>
-            <textarea id="address" name="address" rows="4" required></textarea>
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="4" required></textarea>
 
-            <label for="tin">TIN Number</label>
-            <input type="text" id="tin" name="tin" required>
+                <label for="tin">TIN Number</label>
+                <input type="text" id="tin" name="tin" required>
 
-            <button type="submit">Add Customer</button>
-        </form>
+                <button type="submit">Add Customer</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

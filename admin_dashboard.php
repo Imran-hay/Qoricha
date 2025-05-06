@@ -4,8 +4,8 @@ require 'sidebar.php';
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+    //header("Location: login.php");
+    //exit();
 }
 
 // Include database configuration
