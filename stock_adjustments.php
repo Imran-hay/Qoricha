@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 20px auto;
         }
         h1 {
-            color: #0a888f; /* Darker heading color */
+            color: #2563eb; /* Darker heading color */
             text-align: center;
         }
         table {
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border-radius: 5px;
         }
         button {
-            background-color: #0a888f; /* Green button color */
+            background-color: #2563eb; /* Green button color */
             color: white;
             border: none;
             padding: 10px 15px;
@@ -111,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 20px auto; /* Center the button */
         }
         button:hover {
-            background-color: #0a7b7f; /* Darker green on hover */
+            background-color: #3b82f6; /* Darker green on hover */
         }
         .message {
             text-align: center;

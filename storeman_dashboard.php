@@ -47,9 +47,9 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         
         :root {
-            --primary-color: #0a888f;
-            --secondary-color: #45d9e0;
-            --accent-color: #ff7e5f;
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
             --light-bg: #f8f9fa;
             --dark-color: #2c3e50;
             --light-text: #6c757d;
