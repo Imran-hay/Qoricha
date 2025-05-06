@@ -95,11 +95,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Create Sale</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            margin-left: 280px; /* Adjust for sidebar width */
+         body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: #4a5568;
+            margin: 0;
+            padding: 0;
         }
         .content {
             padding: 30px;
@@ -108,8 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             max-width: 600px;
-            margin: 20px auto;
-            margin-left: 80px; /* Adjust for sidebar width */
+            margin-left: 320px; /* Adjust for sidebar width */
         }
         h1 {
             margin-bottom: 20px;
