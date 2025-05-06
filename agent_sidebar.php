@@ -301,22 +301,22 @@
                 </ul>
             </li> -->
             
-       <!--      <li class="icon-only">
-                <button class="toggle-button" onclick="toggleSubMenu(this, 'reportsSubMenu')">
+         <li class="icon-only">
+                <button class="toggle-button" onclick="toggleSubMenu(this, 'reportsSubMenu')"> 
                     <span class="icon"><i class="fa-solid fa-chart-simple"></i></span>
                     <span class="text">Reports & Analytics</span>
                     <span class="arrow"><i class="fa-solid fa-chevron-down"></i></span>
-                </button> -->
+                </button> 
                 <ul id="reportsSubMenu" class="submenu">
                     <li><a href="item_list.php">Item List</a></li>
-                    <li><a href="cash_sales.php">Cash Sales</a></li>
-                    <li><a href="credit_sales.php">Credit Sales</a></li>
+                    <li><a href="Agent_cash_sales.php">Cash Sales</a></li>
+                    <li><a href="agent_credit_saless.php">Credit Sales</a></li>
                     <li><a href="commission_earned.php">Commission Earned</a></li>
                 </ul>
             </li> 
             
             <li class="icon-only">
-                <a href="view_bank.php">
+                <a href="view_banks.php">
                     <span class="icon"><i class="fa-solid fa-building-columns"></i></span>
                     <span class="text">Bank Accounts</span>
                 </a>
